@@ -1,2 +1,10 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script lang="ts">
+	import PageLayout from '$lib/components/layout/PageLayout.svelte';
+</script>
+
+<PageLayout
+	title="Analyze and find Dividend investments that suit you best!"
+	description="Comprahensive list of dividend stocks and etfs"
+>
+	test</PageLayout
+>

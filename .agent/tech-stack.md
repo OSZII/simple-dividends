@@ -12,6 +12,12 @@ The project is built with modern, efficient technologies focused on performance 
 - **ORM**: [Drizzle ORM](https://orm.drizzle.team/) for type-safe database interactions.
 - **Database Connector**: Drizzle (configured for PostgreSQL as per README).
 
+## UI Components
+- **Components**: [Bits UI](https://bits-ui.com/) Bits UI is a headless component library for Svelte. So for dropdown, dialog, tabs, etc. use Bits UI.
+
+## Icons
+As Icon library phosport-svelte is installed use it!
+
 ## Directory Structure
 - `/src/lib/components`: Shared, reusable components.
 - `/src/lib/server/db`: Database schema and connection logic.
