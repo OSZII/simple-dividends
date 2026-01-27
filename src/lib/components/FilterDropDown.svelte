@@ -12,7 +12,7 @@
 	interface Props {
 		title: string;
 		infotext?: string; // The info text/gray box
-		groupLabel?: string; // The label above checkboxes
+		filterDescription?: string; // The label above checkboxes
 		filters: Option[];
 		checked?: string[];
 		onApply?: () => void;
@@ -22,7 +22,7 @@
 	let {
 		title,
 		infotext,
-		groupLabel,
+		filterDescription,
 		filters,
 		checked = $bindable([]),
 		onApply,
@@ -69,8 +69,8 @@
 					</div>
 				{/if}
 
-				{#if groupLabel}
-					<div class="font-medium">{groupLabel}</div>
+				{#if filterDescription}
+					<div class="font-medium">{filterDescription}</div>
 				{/if}
 
 				<div class="flex flex-col gap-3">

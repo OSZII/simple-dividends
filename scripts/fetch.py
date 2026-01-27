@@ -26,10 +26,10 @@ def fetch_stock_data():
     script_path = Path(__file__).resolve()
     # Path: src/lib/scripts/fetch.py
     # Root: src/
-    project_root = script_path.parent.parent.parent.parent
-    
-    symbols_file = project_root / "src/lib/data/metadata/datasimpleStockdata.json"
-    output_base_dir = project_root / "src/lib/data/companyData"
+    project_root = script_path.parent.parent
+    print(project_root)
+    symbols_file = project_root / "data/metadata/datasimpleStockdata.json"
+    output_base_dir = project_root / "data/companyData"
     
     # Ensure output directory exists
     output_base_dir.mkdir(parents=True, exist_ok=True)

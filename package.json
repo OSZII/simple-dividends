@@ -38,7 +38,9 @@
 	},
 	"dependencies": {
 		"bits-ui": "^2.15.4",
+		"node-cron": "^4.2.1",
 		"phosphor-svelte": "^3.1.0",
-		"postgres": "^3.4.7"
+		"postgres": "^3.4.7",
+		"yahoo-finance2": "^3.13.0"
 	}
 }
