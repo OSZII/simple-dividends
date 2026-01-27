@@ -3,17 +3,11 @@
 	import CheckboxFilter from './filters/CheckboxFilter.svelte';
 	import type { Snippet } from 'svelte';
 
-	interface Option {
-		value: string;
-		label: string;
-		description?: string;
-	}
-
 	interface Props {
 		title: string;
 		infotext?: string; // The info text/gray box
 		filterDescription?: string; // The label above checkboxes
-		filters: Option[];
+		filter: Filter;
 		checked?: string[];
 		onApply?: () => void;
 		trigger?: Snippet;
@@ -23,7 +17,7 @@
 		title,
 		infotext,
 		filterDescription,
-		filters,
+		filter,
 		checked = $bindable([]),
 		onApply,
 		trigger
@@ -74,11 +68,11 @@
 				{/if}
 
 				<div class="flex flex-col gap-3">
-					{#each filters as filter}
+					{#each filter.options as option}
 						<CheckboxFilter
-							value={filter.value}
-							label={filter.label}
-							description={filter.description}
+							value={option.value}
+							label={option.label}
+							description={option.description}
 							bind:checked={localChecked}
 						/>
 					{/each}
