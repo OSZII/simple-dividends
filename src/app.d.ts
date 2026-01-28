@@ -17,13 +17,17 @@ declare global {
 
 	interface Filter {
 		id: string;
-		label: string;
+		type: 'checkbox' | 'two_sided_slider' | "radio";
+		min?: number;
+		max?: number;
+		stepSize?: number;
 		title: string;
 		infotext?: string;
 		filterDescription?: string;
-		options: FilterOption[];
+		sections?: any[];
+		options?: FilterOption[];
 		active: boolean;
-		selected: string[];
+		selected: string | string[] | { min: number, max: number };
 	}
 }
 

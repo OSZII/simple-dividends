@@ -1,39 +1,54 @@
 <script lang="ts">
 	import { AlertDialog } from 'bits-ui';
 	import CheckboxFilter from './filters/CheckboxFilter.svelte';
+	import TwoSidedSlider from './filters/TwoSidedSlider.svelte';
 	import type { Snippet } from 'svelte';
+	import RadioFilter from './filters/RadioFilter.svelte';
 
 	interface Props {
-		title: string;
-		infotext?: string; // The info text/gray box
-		filterDescription?: string; // The label above checkboxes
 		filter: Filter;
-		checked?: string[];
 		onApply?: () => void;
 		trigger?: Snippet;
 	}
 
-	let {
-		title,
-		infotext,
-		filterDescription,
-		filter,
-		checked = $bindable([]),
-		onApply,
-		trigger
-	}: Props = $props();
+	let { filter = $bindable(), onApply, trigger }: Props = $props();
 
 	let open = $state(false);
-	let localChecked = $state<string[]>([]);
+	let localSelected = $state<any>(null);
 
 	$effect(() => {
 		if (open) {
-			localChecked = [...checked];
+			if (filter.type === 'two_sided_slider') {
+				localSelected = { ...(filter.selected as object) };
+			} else if (filter.type === 'radio') {
+				localSelected = filter.selected;
+			} else {
+				const selectedArray = (filter.selected as string[]) || [];
+				const obj: Record<string, boolean> = {};
+				filter.options?.forEach((opt) => {
+					obj[opt.value] = selectedArray.includes(opt.value);
+				});
+				localSelected = obj;
+			}
 		}
 	});
 
+	// this is called from radio filter onchange
+	function handleOnChange(e: any) {
+		localSelected = e.target.value;
+	}
+
 	function handleApply() {
-		checked = [...localChecked];
+		console.log(localSelected, 'apply');
+
+		if (filter.type === 'two_sided_slider') {
+			filter.selected = { ...localSelected };
+		} else if (filter.type === 'radio') {
+			filter.selected = localSelected;
+		} else {
+			// Convert back to array of selected values
+			filter.selected = Object.keys(localSelected).filter((key) => localSelected[key]);
+		}
 		onApply?.();
 		open = false;
 	}
@@ -54,28 +69,53 @@
 		<AlertDialog.Content
 			class="fixed top-[50%] left-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] rounded-2xl bg-base-100 p-6 shadow-xl outline-none"
 		>
-			<AlertDialog.Title class="mb-6 text-center text-xl font-bold">{title}</AlertDialog.Title>
+			<AlertDialog.Title class="mb-6 text-center text-xl font-bold"
+				>{filter.title}</AlertDialog.Title
+			>
 
 			<div class="flex flex-col gap-4">
-				{#if infotext}
+				{#if filter.infotext}
 					<div class="rounded-sm bg-base-200 p-4 text-sm text-base-content/80">
-						{infotext}
+						{filter.infotext}
 					</div>
 				{/if}
 
-				{#if filterDescription}
-					<div class="font-medium">{filterDescription}</div>
+				{#if filter.filterDescription}
+					<div class="text-center font-medium">{filter.filterDescription}</div>
 				{/if}
 
 				<div class="flex flex-col gap-3">
-					{#each filter.options as option}
-						<CheckboxFilter
-							value={option.value}
-							label={option.label}
-							description={option.description}
-							bind:checked={localChecked}
-						/>
-					{/each}
+					{#if localSelected !== null}
+						{#if filter.type === 'two_sided_slider'}
+							<TwoSidedSlider
+								min={filter.min ?? 0}
+								max={filter.max ?? 8}
+								stepSize={filter.stepSize ?? 0.5}
+								sections={filter.sections ?? []}
+								bind:selected={localSelected}
+							/>
+						{:else if filter.type === 'radio'}
+							{#each filter.options || [] as option}
+								<RadioFilter
+									id={filter.id}
+									onchange={handleOnChange}
+									value={option.value}
+									label={option.label}
+									description={option.description}
+									checked={localSelected == option.value}
+								/>
+							{/each}
+						{:else}
+							{#each filter.options || [] as option}
+								<CheckboxFilter
+									value={option.value}
+									label={option.label}
+									description={option.description}
+									bind:checked={localSelected[option.value]}
+								/>
+							{/each}
+						{/if}
+					{/if}
 				</div>
 			</div>
 

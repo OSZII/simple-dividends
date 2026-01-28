@@ -2,19 +2,23 @@
 	interface Props {
 		value: string;
 		label: string;
+		id: string;
 		description?: string;
 		checked: boolean;
+		onchange: (e: any) => void;
 	}
 
-	let { value, label, description, checked = $bindable() }: Props = $props();
+	let { id, value, label, description, checked = $bindable(), onchange }: Props = $props();
 </script>
 
 <label class="flex cursor-pointer items-start gap-3">
 	<input
-		type="checkbox"
-		class="checkbox mt-0.5 checkbox-sm checkbox-primary"
-		name={value}
-		bind:checked
+		{onchange}
+		{value}
+		{checked}
+		type="radio"
+		class="radio mt-0.5 radio-sm radio-primary"
+		name={id}
 	/>
 	<div class="flex flex-col leading-snug">
 		<span class="font-medium">{label}</span>
