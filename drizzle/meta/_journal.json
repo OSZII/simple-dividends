@@ -5,8 +5,36 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1769626229428,
-      "tag": "0000_narrow_meteorite",
+      "when": 1769719867956,
+      "tag": "0000_fancy_shadowcat",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769720226143,
+      "tag": "0001_nosy_hulk",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769721993637,
+      "tag": "0002_funny_scrambler",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1769722628550,
+      "tag": "0003_first_beast",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769722665487,
+      "tag": "0004_loose_mindworm",
       "breakpoints": true
     }
   ]

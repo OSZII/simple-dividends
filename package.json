@@ -16,7 +16,9 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
-		"db:import-sectors": "tsx scripts/import-sectors.ts"
+		"db:import-sectors": "tsx scripts/import-sectors.ts",
+		"db:import-countries": "tsx scripts/import-countries.ts",
+		"db:import-stockinfo": "tsx scripts/import-stockinfo.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^5.4.0",

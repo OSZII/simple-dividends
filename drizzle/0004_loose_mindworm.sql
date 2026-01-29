@@ -1,0 +1,1 @@
+ALTER TABLE "stocks" ADD COLUMN "dividend_safety_score" integer;

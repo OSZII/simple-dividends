@@ -1,16 +1,16 @@
 import { db } from './db';
-import { sectors } from '../src/lib/server/db/schema';
+import { countries, sectors } from '../src/lib/server/db/schema';
 import * as fs from 'fs';
 import * as path from 'path';
 
 async function importSectors() {
-    console.log('Starting sectors import...');
+    console.log('Starting countries import...');
 
     const companyDataPath = path.resolve(process.cwd(), 'data/companyData');
 
     let files = fs.readdirSync(companyDataPath);
 
-    let sectorData = new Set<string>();
+    let countryData = new Set<string>();
 
     files.forEach((file) => {
         if (file === ".DS_Store") {
@@ -20,20 +20,19 @@ async function importSectors() {
         let compandyInfoRaw = fs.readFileSync(`${companyDataPath}/${file}/info.json`) as unknown as string;
         let companyInfo = JSON.parse(compandyInfoRaw);
 
-        if (!companyInfo.hasOwnProperty("sectorKey") || !companyInfo.hasOwnProperty("sectorDisp")) {
+        if (!companyInfo.hasOwnProperty("country")) {
             return;
         }
-
-        sectorData.add(companyInfo["sectorKey"]);
+        countryData.add(companyInfo["country"]);
     })
 
     try {
-        await db.insert(sectors)
-            .values(Array.from(sectorData).map((sector) => ({
-                name: sector
+        await db.insert(countries)
+            .values(Array.from(countryData).map((country) => ({
+                name: country
             })))
             .onConflictDoNothing();
-        console.log('Sectors import completed successfully!');
+        console.log('Countries import completed successfully!');
     } catch (error) {
         console.error('Error importing sectors:', error);
         process.exit(1);
