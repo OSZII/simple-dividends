@@ -18,7 +18,8 @@
 		"db:studio": "drizzle-kit studio",
 		"db:import-sectors": "tsx scripts/import-sectors.ts",
 		"db:import-countries": "tsx scripts/import-countries.ts",
-		"db:import-stockinfo": "tsx scripts/import-stockinfo.ts"
+		"db:import-stockinfo": "tsx scripts/import-stockinfo.ts",
+		"db:import-unique-stock-symbols-and-stockinfo": "tsx scripts/fetch-and-import-unique-stock-symbols.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^5.4.0",
@@ -47,5 +48,8 @@
 		"phosphor-svelte": "^3.1.0",
 		"postgres": "^3.4.7",
 		"yahoo-finance2": "^3.13.0"
+	},
+	"engines": {
+		"node": ">=22.12"
 	}
 }
