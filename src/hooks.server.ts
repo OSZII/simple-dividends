@@ -22,6 +22,14 @@ cron.schedule('30 0 * * 7', () => {
 });
 
 export const handle: Handle = async ({ event, resolve }) => {
+    // get query param here
+    const scriptParam = event.url.searchParams.get('script');
+    if (scriptParam === 'import-stocks') {
+        importStocks();
+    }
+    if (scriptParam === 'import-history') {
+        importStockHistory();
+    }
     const response = await resolve(event);
     return response;
 };

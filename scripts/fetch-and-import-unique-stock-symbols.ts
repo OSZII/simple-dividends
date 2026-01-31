@@ -81,7 +81,6 @@ async function importStocks() {
                 exchange: stockInfo.exchange ?? null,
 
                 // Company Info
-                fullTimeEmployees: stockInfo.fullTimeEmployees ?? null,
                 marketCap: stockInfo.marketCap ?? null,
 
                 // Dividend Data
