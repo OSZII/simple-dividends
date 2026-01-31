@@ -1,10 +1,12 @@
 import type { Handle } from '@sveltejs/kit';
 import cron from 'node-cron';
+import { importStocks } from './lib/server/scripts/importFromStockTickers';
 
 // This runs once when the server starts
-cron.schedule('* * * * *', () => {
-    console.log('Running a task every minute');
-});
+// cron.schedule('* * * * *', () => {
+// console.log('Running a task every minute');
+importStocks();
+// });
 
 
 export const handle: Handle = async ({ event, resolve }) => {
