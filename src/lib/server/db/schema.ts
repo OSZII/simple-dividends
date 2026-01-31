@@ -53,8 +53,10 @@ export const stocks = pgTable('stocks', {
     countryId: integer('country_id').references(() => countries.id),
     exchange: text('exchange'),
 
+    // Currency
+    currency: text('currency').default('USD'),
+
     // Company Info
-    fullTimeEmployees: integer('full_time_employees'),
     marketCap: bigint('market_cap', { mode: 'number' }),
     averageDollarVolume90d: bigint('average_dollar_volume_90d', { mode: 'number' }), // 90-day avg daily $ volume
 

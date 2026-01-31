@@ -3,17 +3,14 @@ import cron from 'node-cron';
 import { importStocks } from './lib/server/scripts/importFromStockTickers';
 
 // This runs once when the server starts
-// cron.schedule('* * * * *', () => {
-// console.log('Running a task every minute');
-importStocks();
-// });
+// once a hour update stocks i basically do this to get the most recent stock price
+cron.schedule('0 * * * *', () => {
+    console.log('Updating stocks...');
+    importStocks();
+});
 
 
 export const handle: Handle = async ({ event, resolve }) => {
-    // if (event.url.pathname.startsWith('/custom')) {
-    //     return new Response('custom response');
-    // }
-
     const response = await resolve(event);
     return response;
 };

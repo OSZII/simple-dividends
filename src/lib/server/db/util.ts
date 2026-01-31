@@ -11,8 +11,9 @@ export function mapToStockInsert(stockInfo: any, sector: any = null, country: an
         countryId: country,
         exchange: stockInfo.exchange ?? null,
 
+        currency: stockInfo.currency ?? null,
+
         // Company Info
-        fullTimeEmployees: stockInfo.fullTimeEmployees ?? null,
         marketCap: stockInfo.marketCap ?? null,
 
         // Dividend Data

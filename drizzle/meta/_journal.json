@@ -36,6 +36,13 @@
       "when": 1769722665487,
       "tag": "0004_loose_mindworm",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1769887587979,
+      "tag": "0005_mean_luckman",
+      "breakpoints": true
     }
   ]
 }

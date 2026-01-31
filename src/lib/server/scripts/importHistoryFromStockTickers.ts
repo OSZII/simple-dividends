@@ -75,9 +75,6 @@ async function importStocks() {
 
                 const updateData: typeof stocks.$inferInsert = mapToStockInsert(stockInfo, sectorId, countryId);
 
-                // date in this format: 2026-01-31 10:20:41.258000
-                updateData.lastUpdated = new Date();
-
                 // Update the stock by symbol
                 await db
                     .update(stocks)
