@@ -12,7 +12,7 @@ import YahooFinance from 'yahoo-finance2';
 
 const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
-async function importStocks() {
+async function importStocks(silent: boolean = false) {
     console.log('Starting stocks update...');
 
     // Build lookup maps for sectors and countries
@@ -84,7 +84,6 @@ async function importStocks() {
                     .set(updateData)
                     .where(eq(stocks.symbol, stockInfo.symbol));
 
-                console.log(`✓ Updated ${stockInfo.symbol}`);
             } catch (error) {
                 console.error(`Error updating stock ${stockInfo.symbol}:`, error);
             }

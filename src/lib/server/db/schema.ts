@@ -1,4 +1,4 @@
-import { pgTable, integer, text, real, bigint, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, integer, text, real, bigint, timestamp, pgEnum, date, decimal } from 'drizzle-orm/pg-core';
 
 // Enums
 export const valuationStatusEnum = pgEnum('valuation_status', [
@@ -149,11 +149,30 @@ export const stocks = pgTable('stocks', {
 
 // Not now
 // // Dividend History - for tracking historical dividend payments
-// export const dividendHistory = pgTable('dividend_history', {
-//     id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
-//     stockId: integer('stock_id').references(() => stocks.id).notNull(),
-//     exDate: bigint('ex_date', { mode: 'number' }).notNull(),
-//     paymentDate: bigint('payment_date', { mode: 'number' }),
-//     amount: real('amount').notNull(),
-//     currency: text('currency').default('USD')
-// });
+export const dividends = pgTable('dividends', {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    symbol: text('symbol').references(() => stocks.symbol).notNull(),
+    date: date('date', { mode: 'string' }).notNull(),
+    // 11 digits total, 5 before decimal, 6 after max value 99,999.999999
+    amount: decimal('amount', { precision: 11, scale: 6 }).notNull(),
+    // use currency from stocks table, so no need to store it here
+    // currency: text('currency').default('USD')
+});
+
+export const splits = pgTable('splits', {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    symbol: text('symbol').references(() => stocks.symbol).notNull(),
+    date: date('date', { mode: 'string' }).notNull(),
+    numerator: integer('numerator').notNull(),
+    denominator: integer('denominator').notNull(),
+});
+
+export const stockHistory = pgTable('stock_history', {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    symbol: text('symbol').references(() => stocks.symbol).notNull(),
+    date: date('date', { mode: 'string' }).notNull(),
+    // adjclose as close is the price of the stock adjusted for splits and dividends
+    // 12 digits total, 8 before decimal, 4 after max value 99,999,999.9999
+    price: decimal('price', { precision: 12, scale: 4 }).notNull(),
+    volume: bigint('volume', { mode: 'number' }).notNull(),
+});

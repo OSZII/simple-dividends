@@ -1,6 +1,6 @@
 import { db } from '../db';
-import { stocks, sectors, countries } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { stocks, sectors, countries, stockHistory, dividends as dividendsTable, splits as splitsTable } from '../db/schema';
+import { count, desc, eq } from 'drizzle-orm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -12,86 +12,183 @@ import YahooFinance from 'yahoo-finance2';
 
 const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
-async function importStocks() {
-    console.log('Starting stocks update...');
+// Helper function to delay execution
+function delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-    // Build lookup maps for sectors and countries
-    const sectorRows = await db.select().from(sectors);
-    const countryRows = await db.select().from(countries);
+// Check if a date is older than 1 week
+function isOlderThanOneWeek(dateString: string): boolean {
+    const date = new Date(dateString);
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    return date < oneWeekAgo;
+}
 
-    const sectorMap = new Map<string, number>();
-    sectorRows.forEach((s) => sectorMap.set(s.name, s.id));
+async function importStockHistory() {
+    console.log('Starting history update...');
 
-    const countryMap = new Map<string, number>();
-    countryRows.forEach((c) => countryMap.set(c.name, c.id));
+    // Configuration
+    const BATCH_SIZE = 50; // Load stocks in batches of 50
+    const DELAY_MS = 4000; // 4 seconds between requests to avoid rate limiting
 
-    // Get all existing symbols from the database
-    const symbolsRows = await db.select({ id: stocks.id, symbol: stocks.symbol })
-        .from(stocks);
-    const symbolsArray = symbolsRows.map((s) => s.symbol);
+    // get count of stocks in db
+    const stockCount = await db.select({ count: count() })
+        .from(stocks)
 
-    console.log(`Found ${symbolsArray.length} stocks to update`);
+    let totalStockCount = stockCount[0].count;
 
-    // Group symbols into batches of 200 for Yahoo Finance API
-    const groupedSymbols = symbolsArray.reduce((acc, symbol) => {
-        const lastGroup = acc[acc.length - 1];
-        if (lastGroup && lastGroup.length < 200) {
-            lastGroup.push(symbol);
-        } else {
-            acc.push([symbol]);
-        }
-        return acc;
-    }, [] as string[][]);
+    console.log(`Found ${totalStockCount} stocks to check history`);
+    console.log(`Processing in batches of ${BATCH_SIZE} with ${DELAY_MS}ms delay between requests`);
+    console.log(`Estimated time: ~${Math.ceil((totalStockCount * DELAY_MS) / 1000 / 60 / 60)} hours`);
 
-    // Process each batch
-    for (let i = 0; i < groupedSymbols.length; i++) {
-        const symbolsBatch = groupedSymbols[i];
-        console.log(`Processing batch ${i + 1}/${groupedSymbols.length} (${symbolsBatch.length} symbols)...`);
+    let processedCount = 0;
+    let skippedCount = 0;
+    let offset = 0;
 
-        let stockData;
-        try {
-            stockData = await yahooFinance.quote(symbolsBatch);
-        } catch (error: any) {
-            console.error(`Error fetching quotes for batch ${i + 1}:`, error.message);
-            if (error.result) {
-                console.log(`Partial results available, using ${error.result.length} valid quotes`);
-                stockData = error.result;
-            } else {
-                console.log(`Skipping batch ${i + 1} due to validation error`);
-                continue;
-            }
+    // Process stocks in batches
+    while (true) {
+        // Load a batch of stocks
+        const stocksBatch = await db.select()
+            .from(stocks)
+            .limit(BATCH_SIZE)
+            .offset(offset);
+
+        // Exit if no more stocks
+        if (stocksBatch.length === 0) {
+            break;
         }
 
-        // Update each stock individually
-        for (const stockInfo of stockData) {
-            if (!stockInfo.symbol) {
-                console.warn(`Skipping entry: no symbol found`);
-                continue;
-            }
+        console.log(`\n--- Loading batch ${Math.floor(offset / BATCH_SIZE) + 1} (${stocksBatch.length} stocks) ---`);
+
+        // Process each stock in the batch
+        for (let i = 0; i < stocksBatch.length; i++) {
+            const stock = stocksBatch[i];
+            const globalIndex = offset + i + 1;
 
             try {
-                const sectorId = stockInfo.sectorKey ? sectorMap.get(stockInfo.sectorKey) ?? null : null;
-                const countryId = stockInfo.country ? countryMap.get(stockInfo.country) ?? null : null;
+                // Get the last history date for this stock
+                const lastHistoryDate = await db
+                    .select()
+                    .from(stockHistory)
+                    .where(eq(stockHistory.symbol, stock.symbol))
+                    .orderBy(desc(stockHistory.date))
+                    .limit(1);
 
-                const updateData: typeof stocks.$inferInsert = mapToStockInsert(stockInfo, sectorId, countryId);
+                // Check if we should skip this stock (data is less than 1 week old)
+                if (lastHistoryDate.length > 0) {
+                    const lastDate = lastHistoryDate[0].date;
+                    if (!isOlderThanOneWeek(lastDate)) {
+                        console.log(`⏭ Skipping ${globalIndex}/${totalStockCount}: ${stock.symbol} (last data from ${lastDate} is less than 1 week old)`);
+                        skippedCount++;
+                        continue;
+                    }
+                }
 
-                // Update the stock by symbol
-                await db
-                    .update(stocks)
-                    .set(updateData)
-                    .where(eq(stocks.symbol, stockInfo.symbol));
+                console.log(`Processing ${globalIndex}/${totalStockCount}: ${stock.symbol}`);
 
-                console.log(`✓ Updated ${stockInfo.symbol}`);
+                // Determine start date
+                let startDate = "1900-01-01";
+                if (lastHistoryDate.length > 0) {
+                    startDate = lastHistoryDate[0].date;
+                }
+
+                console.log(`  Fetching history from ${startDate}...`);
+
+                // Get history via charts function
+                const history = await yahooFinance.chart(stock.symbol, { period1: startDate });
+
+                let prices = history.quotes;
+                let dividends = history.events?.dividends ?? [];
+                let splits = history.events?.splits ?? [];
+
+                const INSERT_BATCH_SIZE = 10000;
+
+                // Prepare price data for batch insert
+                const priceValues = prices
+                    .map(price => {
+                        const priceValue = price.adjclose ?? price.close;
+                        if (priceValue === null || priceValue === undefined) {
+                            return null;
+                        }
+                        return {
+                            symbol: stock.symbol,
+                            date: price.date instanceof Date ? price.date.toISOString().split('T')[0] : price.date,
+                            price: priceValue.toString(),
+                            volume: price.volume ?? 0,
+                        };
+                    })
+                    .filter((v): v is NonNullable<typeof v> => v !== null);
+
+                // Insert prices in batches
+                for (let j = 0; j < priceValues.length; j += INSERT_BATCH_SIZE) {
+                    const batch = priceValues.slice(j, j + INSERT_BATCH_SIZE);
+                    try {
+                        await db.insert(stockHistory).values(batch).onConflictDoNothing();
+                    } catch (error) {
+                        console.error(`  Error inserting price batch for ${stock.symbol}:`, error);
+                    }
+                }
+
+                // Prepare dividend data for batch insert
+                const dividendValues = dividends.map(dividend => ({
+                    symbol: stock.symbol,
+                    date: dividend.date instanceof Date ? dividend.date.toISOString().split('T')[0] : dividend.date,
+                    amount: dividend.amount.toString(),
+                }));
+
+                // Insert dividends in batches
+                for (let j = 0; j < dividendValues.length; j += INSERT_BATCH_SIZE) {
+                    const batch = dividendValues.slice(j, j + INSERT_BATCH_SIZE);
+                    try {
+                        await db.insert(dividendsTable).values(batch).onConflictDoNothing();
+                    } catch (error) {
+                        console.error(`  Error inserting dividend batch for ${stock.symbol}:`, error);
+                    }
+                }
+
+                // Prepare split data for batch insert
+                const splitValues = splits.map(split => ({
+                    symbol: stock.symbol,
+                    date: split.date instanceof Date ? split.date.toISOString().split('T')[0] : split.date,
+                    numerator: split.numerator,
+                    denominator: split.denominator,
+                }));
+
+                // Insert splits in batches
+                for (let j = 0; j < splitValues.length; j += INSERT_BATCH_SIZE) {
+                    const batch = splitValues.slice(j, j + INSERT_BATCH_SIZE);
+                    try {
+                        await db.insert(splitsTable).values(batch).onConflictDoNothing();
+                    } catch (error) {
+                        console.error(`  Error inserting split batch for ${stock.symbol}:`, error);
+                    }
+                }
+
+                console.log(`✓ Completed ${stock.symbol}: ${prices.length} prices, ${dividends.length} dividends, ${splits.length} splits`);
+                processedCount++;
+
+                // Wait 4 seconds before next request to avoid rate limiting
+                if (i < stocksBatch.length - 1 || offset + BATCH_SIZE < totalStockCount) {
+                    console.log(`  Waiting ${DELAY_MS}ms before next request...`);
+                    await delay(DELAY_MS);
+                }
             } catch (error) {
-                console.error(`Error updating stock ${stockInfo.symbol}:`, error);
+                console.error(`❌ Error processing stock ${stock.symbol}:`, error);
+                // Continue to next stock after delay
+                await delay(DELAY_MS);
+                continue;
             }
         }
 
-        console.log(`Batch ${i + 1}/${groupedSymbols.length} completed`);
+        offset += BATCH_SIZE;
     }
 
-    console.log('All stocks updated successfully!');
+    console.log('\n=== Import Complete ===');
+    console.log(`Total stocks: ${totalStockCount}`);
+    console.log(`Processed: ${processedCount}`);
+    console.log(`Skipped (data < 1 week old): ${skippedCount}`);
     return;
 }
 
-export { importStocks };
+export { importStockHistory };
