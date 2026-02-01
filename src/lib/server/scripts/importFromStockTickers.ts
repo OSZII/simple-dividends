@@ -30,7 +30,7 @@ async function importStocks(silent: boolean = false) {
         .from(stocks);
     const symbolsArray = symbolsRows.map((s) => s.symbol);
 
-    console.log('[IMPORT-STOCKS]Found ${symbolsArray.length} stocks to update`);
+    console.log(`[IMPORT-STOCKS]Found ${symbolsArray.length} stocks to update`);
 
     // Group symbols into batches of 200 for Yahoo Finance API
     const groupedSymbols = symbolsArray.reduce((acc, symbol) => {
