@@ -62,6 +62,10 @@ export function mapToStockInsert(stockInfo: any, sector: any = null, country: an
         twoHundredDayAverage: stockInfo.twoHundredDayAverage ?? null,
         beta: stockInfo.beta ?? null,
 
+        // 3 month average volume in
+        volume90d: stockInfo.averageDailyVolume3Month ?? null,
+        volume: stockInfo.regularMarketVolume ?? null,
+
         // Earnings
         trailingEps: stockInfo.trailingEps ?? stockInfo.epsTrailingTwelveMonths ?? null,
         forwardEps: stockInfo.forwardEps ?? stockInfo.epsForward ?? null,

@@ -16,8 +16,10 @@ import YahooFinance from 'yahoo-finance2';
 
 const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
-// let data = await yahooFinance.chart('AAPL', { period1: '1900-01-01', period2: '2026-01-01' });
-// fs.writeFileSync(join(dataDir, "AAPL.json"), JSON.stringify(data, null, 2));
+let symbol = "AAPL";
 
-let data = await yahooFinance.quote('AAPL');
-console.log(data);
+let data = await yahooFinance.chart(symbol, { period1: '1900-01-01', period2: '2026-01-01' });
+fs.writeFileSync(join(dataDir, `${symbol}.json`), JSON.stringify(data, null, 2));
+
+let quote = await yahooFinance.quote(symbol);
+console.log(quote);

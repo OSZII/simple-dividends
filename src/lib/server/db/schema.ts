@@ -58,7 +58,8 @@ export const stocks = pgTable('stocks', {
 
     // Company Info
     marketCap: bigint('market_cap', { mode: 'number' }),
-    averageDollarVolume90d: bigint('average_dollar_volume_90d', { mode: 'number' }), // 90-day avg daily $ volume
+    volume90d: bigint('volume90d', { mode: 'number' }), // 90-day avg daily $ volume
+    volume: bigint('volume', { mode: 'number' }), // 90-day avg daily $ volume
 
     // === DIVIDEND DATA ===
     dividendRate: real('dividend_rate'),
