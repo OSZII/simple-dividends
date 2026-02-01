@@ -13,7 +13,7 @@ import YahooFinance from 'yahoo-finance2';
 const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
 async function importStocks(silent: boolean = false) {
-    console.log('Starting stocks update...');
+    console.log('[IMPORT-STOCKS]Starting stocks update...');
 
     // Build lookup maps for sectors and countries
     const sectorRows = await db.select().from(sectors);
@@ -30,7 +30,7 @@ async function importStocks(silent: boolean = false) {
         .from(stocks);
     const symbolsArray = symbolsRows.map((s) => s.symbol);
 
-    console.log(`Found ${symbolsArray.length} stocks to update`);
+    console.log('[IMPORT-STOCKS]Found ${symbolsArray.length} stocks to update`);
 
     // Group symbols into batches of 200 for Yahoo Finance API
     const groupedSymbols = symbolsArray.reduce((acc, symbol) => {
@@ -46,18 +46,18 @@ async function importStocks(silent: boolean = false) {
     // Process each batch
     for (let i = 0; i < groupedSymbols.length; i++) {
         const symbolsBatch = groupedSymbols[i];
-        console.log(`Processing batch ${i + 1}/${groupedSymbols.length} (${symbolsBatch.length} symbols)...`);
+        console.log(`[IMPORT-STOCKS]Processing batch ${i + 1}/${groupedSymbols.length} (${symbolsBatch.length} symbols)...`);
 
         let stockData;
         try {
             stockData = await yahooFinance.quote(symbolsBatch);
         } catch (error: any) {
-            console.error(`Error fetching quotes for batch ${i + 1}:`, error.message);
+            console.error(`[IMPORT-STOCKS]Error fetching quotes for batch ${i + 1}:`, error.message);
             if (error.result) {
-                console.log(`Partial results available, using ${error.result.length} valid quotes`);
+                console.log(`[IMPORT-STOCKS]Partial results available, using ${error.result.length} valid quotes`);
                 stockData = error.result;
             } else {
-                console.log(`Skipping batch ${i + 1} due to validation error`);
+                console.log(`[IMPORT-STOCKS]Skipping batch ${i + 1} due to validation error`);
                 continue;
             }
         }
@@ -65,7 +65,7 @@ async function importStocks(silent: boolean = false) {
         // Update each stock individually
         for (const stockInfo of stockData) {
             if (!stockInfo.symbol) {
-                console.warn(`Skipping entry: no symbol found`);
+                console.warn(`[IMPORT-STOCKS]Skipping entry: no symbol found`);
                 continue;
             }
 
@@ -85,14 +85,14 @@ async function importStocks(silent: boolean = false) {
                     .where(eq(stocks.symbol, stockInfo.symbol));
 
             } catch (error) {
-                console.error(`Error updating stock ${stockInfo.symbol}:`, error);
+                console.error(`[IMPORT-STOCKS]Error updating stock ${stockInfo.symbol}:`, error);
             }
         }
 
-        console.log(`Batch ${i + 1}/${groupedSymbols.length} completed`);
+        console.log(`[IMPORT-STOCKS]Batch ${i + 1}/${groupedSymbols.length} completed`);
     }
 
-    console.log('All stocks updated successfully!');
+    console.log('[IMPORT-STOCKS]All stocks updated successfully!');
     return;
 }
 

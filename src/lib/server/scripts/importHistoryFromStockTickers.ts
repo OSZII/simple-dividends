@@ -26,7 +26,7 @@ function isOlderThanOneWeek(dateString: string): boolean {
 }
 
 async function importStockHistory() {
-    console.log('Starting history update...');
+    console.log('[IMPORT-HISTORY]Starting history update...');
 
     // Configuration
     const BATCH_SIZE = 50; // Load stocks in batches of 50
@@ -38,9 +38,9 @@ async function importStockHistory() {
 
     let totalStockCount = stockCount[0].count;
 
-    console.log(`Found ${totalStockCount} stocks to check history`);
-    console.log(`Processing in batches of ${BATCH_SIZE} with ${DELAY_MS}ms delay between requests`);
-    console.log(`Estimated time: ~${Math.ceil((totalStockCount * DELAY_MS) / 1000 / 60 / 60)} hours`);
+    console.log(`[IMPORT-HISTORY]Found ${totalStockCount} stocks to check history`);
+    console.log(`[IMPORT-HISTORY]Processing in batches of ${BATCH_SIZE} with ${DELAY_MS}ms delay between requests`);
+    console.log(`[IMPORT-HISTORY]Estimated time: ~${Math.ceil((totalStockCount * DELAY_MS) / 1000 / 60 / 60)} hours`);
 
     let processedCount = 0;
     let skippedCount = 0;
@@ -59,7 +59,7 @@ async function importStockHistory() {
             break;
         }
 
-        console.log(`\n--- Loading batch ${Math.floor(offset / BATCH_SIZE) + 1} (${stocksBatch.length} stocks) ---`);
+        console.log(`\n[IMPORT-HISTORY]--- Loading batch ${Math.floor(offset / BATCH_SIZE) + 1} (${stocksBatch.length} stocks) ---`);
 
         // Process each stock in the batch
         for (let i = 0; i < stocksBatch.length; i++) {
@@ -79,13 +79,13 @@ async function importStockHistory() {
                 if (lastHistoryDate.length > 0) {
                     const lastDate = lastHistoryDate[0].date;
                     if (!isOlderThanOneWeek(lastDate)) {
-                        console.log(`⏭ Skipping ${globalIndex}/${totalStockCount}: ${stock.symbol} (last data from ${lastDate} is less than 1 week old)`);
+                        console.log(`[IMPORT-HISTORY]⏭ Skipping ${globalIndex}/${totalStockCount}: ${stock.symbol} (last data from ${lastDate} is less than 1 week old)`);
                         skippedCount++;
                         continue;
                     }
                 }
 
-                console.log(`Processing ${globalIndex}/${totalStockCount}: ${stock.symbol}`);
+                console.log(`[IMPORT-HISTORY] Processing ${globalIndex}/${totalStockCount}: ${stock.symbol}`);
 
                 // Determine start date
                 let startDate = "1900-01-01";
@@ -93,7 +93,7 @@ async function importStockHistory() {
                     startDate = lastHistoryDate[0].date;
                 }
 
-                console.log(`  Fetching history from ${startDate}...`);
+                console.log(`[IMPORT-HISTORY] Fetching history from ${startDate}...`);
 
                 // Get history via charts function
                 const history = await yahooFinance.chart(stock.symbol, { period1: startDate });
@@ -126,7 +126,7 @@ async function importStockHistory() {
                     try {
                         await db.insert(stockHistory).values(batch).onConflictDoNothing();
                     } catch (error) {
-                        console.error(`  Error inserting price batch for ${stock.symbol}:`, error);
+                        console.error(`[IMPORT-HISTORY] Error inserting price batch for ${stock.symbol}:`, error);
                     }
                 }
 
@@ -143,7 +143,7 @@ async function importStockHistory() {
                     try {
                         await db.insert(dividendsTable).values(batch).onConflictDoNothing();
                     } catch (error) {
-                        console.error(`  Error inserting dividend batch for ${stock.symbol}:`, error);
+                        console.error(`[IMPORT-HISTORY] Error inserting dividend batch for ${stock.symbol}:`, error);
                     }
                 }
 
@@ -161,20 +161,20 @@ async function importStockHistory() {
                     try {
                         await db.insert(splitsTable).values(batch).onConflictDoNothing();
                     } catch (error) {
-                        console.error(`  Error inserting split batch for ${stock.symbol}:`, error);
+                        console.error(`[IMPORT-HISTORY] Error inserting split batch for ${stock.symbol}:`, error);
                     }
                 }
 
-                console.log(`✓ Completed ${stock.symbol}: ${prices.length} prices, ${dividends.length} dividends, ${splits.length} splits`);
+                console.log(`[IMPORT-HISTORY]✓ Completed ${stock.symbol}: ${prices.length} prices, ${dividends.length} dividends, ${splits.length} splits`);
                 processedCount++;
 
                 // Wait 4 seconds before next request to avoid rate limiting
                 if (i < stocksBatch.length - 1 || offset + BATCH_SIZE < totalStockCount) {
-                    console.log(`  Waiting ${DELAY_MS}ms before next request...`);
+                    console.log(`[IMPORT-HISTORY] Waiting ${DELAY_MS}ms before next request...`);
                     await delay(DELAY_MS);
                 }
             } catch (error) {
-                console.error(`❌ Error processing stock ${stock.symbol}:`, error);
+                console.error(`[IMPORT-HISTORY]❌ Error processing stock ${stock.symbol}:`, error);
                 // Continue to next stock after delay
                 await delay(DELAY_MS);
                 continue;
@@ -184,10 +184,10 @@ async function importStockHistory() {
         offset += BATCH_SIZE;
     }
 
-    console.log('\n=== Import Complete ===');
-    console.log(`Total stocks: ${totalStockCount}`);
-    console.log(`Processed: ${processedCount}`);
-    console.log(`Skipped (data < 1 week old): ${skippedCount}`);
+    console.log('\n[IMPORT-HISTORY] === Import Complete ===');
+    console.log(`[IMPORT-HISTORY]Total stocks: ${totalStockCount}`);
+    console.log(`[IMPORT-HISTORY]Processed: ${processedCount}`);
+    console.log(`[IMPORT-HISTORY]Skipped (data < 1 week old): ${skippedCount}`);
     return;
 }
 
