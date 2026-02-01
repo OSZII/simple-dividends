@@ -21,5 +21,7 @@ let symbol = "AAPL";
 let data = await yahooFinance.chart(symbol, { period1: '1900-01-01', period2: '2026-01-01' });
 fs.writeFileSync(join(dataDir, `${symbol}.json`), JSON.stringify(data, null, 2));
 
-let quote = await yahooFinance.quote(symbol);
-console.log(quote);
+let quote = await yahooFinance.quoteSummary(symbol, {
+    modules: ['assetProfile']
+});
+fs.writeFileSync(join(dataDir, `${symbol}-quote.json`), JSON.stringify(quote, null, 2));

@@ -217,7 +217,7 @@
 				<div
 					tabIndex={0}
 					role="button"
-					class="btn gap-2 rounded-full border border-dashed border-base-content/20 px-4 py-2 font-medium text-base-content/60 btn-ghost"
+					class="btn-ghost btn gap-2 rounded-full px-4 py-2 font-medium opacity-80 hover:opacity-100"
 				>
 					<Plus size={16} weight="bold" class="text-primary" />
 					More filters

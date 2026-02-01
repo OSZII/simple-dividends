@@ -17,10 +17,8 @@
 	role="button"
 	tabindex="0"
 	class={[
-		'flex cursor-pointer items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm whitespace-nowrap transition-all select-none',
-		isActive
-			? 'border border-neutral-400 text-white shadow-sm'
-			: 'border border-dashed text-base-content/60 hover:border-base-content/40'
+		'btn flex items-center gap-2 rounded-full text-sm whitespace-nowrap transition-all duration-150 select-none',
+		isActive ? 'text-primary-content btn-primary' : 'btn-dash'
 	]}
 	{onclick}
 	onkeydown={(e) => e.key === 'Enter' && onclick?.()}
@@ -39,7 +37,7 @@
 	{#if isActive}
 		<button
 			type="button"
-			class="pointer-events-auto ml-1 rounded-md p-1 transition-colors hover:bg-neutral-600"
+			class="ml-1 p-1 outline-0 transition-colors hover:cursor-pointer"
 			onclick={(e) => {
 				e.stopPropagation();
 				onRemove?.();
