@@ -69,6 +69,16 @@ async function importStocks(silent: boolean = false) {
                 continue;
             }
 
+            if (!stockInfo.shortName) {
+                console.warn(`[IMPORT-STOCKS]Skipping entry: no short name found`);
+                continue;
+            }
+
+            if (!stockInfo.regularMarketVolume) {
+                console.warn(`[IMPORT-STOCKS]Skipping entry: no volume found`);
+                continue;
+            }
+
             try {
                 const sectorId = stockInfo.sectorKey ? sectorMap.get(stockInfo.sectorKey) ?? null : null;
                 const countryId = stockInfo.country ? countryMap.get(stockInfo.country) ?? null : null;
