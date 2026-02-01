@@ -104,7 +104,7 @@ export const stocks = pgTable('stocks', {
     valuationStatus: valuationStatusEnum('valuation_status'),
 
     // === PRICE DATA ===
-    currentPrice: real('current_price'),
+    price: real('price'),
     previousClose: real('previous_close'),
     fiftyTwoWeekHigh: real('fifty_two_week_high'),
     fiftyTwoWeekLow: real('fifty_two_week_low'),

@@ -54,7 +54,7 @@ export function mapToStockInsert(stockInfo: any, sector: any = null, country: an
         valuationStatus: null,
 
         // Price Data
-        currentPrice: stockInfo.currentPrice ?? stockInfo.regularMarketPrice ?? null,
+        price: stockInfo.currentPrice ?? stockInfo.regularMarketPrice ?? null,
         previousClose: stockInfo.previousClose ?? null,
         fiftyTwoWeekHigh: stockInfo.fiftyTwoWeekHigh ?? null,
         fiftyTwoWeekLow: stockInfo.fiftyTwoWeekLow ?? null,

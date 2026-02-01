@@ -1,0 +1,1 @@
+ALTER TABLE "stocks" RENAME COLUMN "current_price" TO "price";
