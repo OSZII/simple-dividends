@@ -3,6 +3,7 @@ import cron from 'node-cron';
 import { importStocks } from './lib/server/scripts/importFromStockTickers';
 import { importStockHistory } from '$lib/server/scripts/importHistoryFromStockTickers';
 import { dev } from '$app/environment';
+import { calculateRecessionReturns } from '$lib/server/scripts/calculateRecessionReturns';
 
 // This runs once when the server starts
 // once a hour update stocks i basically do this to get the most recent stock price
@@ -21,6 +22,14 @@ cron.schedule('30 0 * * 7', () => {
     importStockHistory();
 });
 
+// every sunday at 01:00 calculate recession returns
+cron.schedule('0 1 * * 7', () => {
+    if (dev) {
+        return;
+    }
+    calculateRecessionReturns();
+});
+
 export const handle: Handle = async ({ event, resolve }) => {
     // get query param here
     const scriptParam = event.url.searchParams.get('script');
@@ -29,6 +38,9 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
     if (scriptParam === 'import-history') {
         importStockHistory();
+    }
+    if (scriptParam === 'calculate-recession-returns') {
+        calculateRecessionReturns();
     }
     const response = await resolve(event);
     return response;

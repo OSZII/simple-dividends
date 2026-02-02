@@ -1,4 +1,4 @@
-import { pgTable, integer, text, real, bigint, timestamp, pgEnum, date, decimal } from 'drizzle-orm/pg-core';
+import { pgTable, integer, text, real, bigint, timestamp, pgEnum, date, decimal, index, jsonb } from 'drizzle-orm/pg-core';
 
 // Enums
 export const valuationStatusEnum = pgEnum('valuation_status', [
@@ -92,6 +92,7 @@ export const stocks = pgTable('stocks', {
 
     // Recession Performance 2007 - 2009
     recessionDividendPerformance: text('recession_dividend_performance'), // "maintained", "cut", "increased"
+    annualTotalDividends: jsonb('annual_total_dividends').$type<{ [year: string]: number }>(),
     // 5 steps compared to S&P 500 very good, good, average, poor, very poor
     recessionReturn: real('recession_return'), // performance during recession %
 
@@ -146,7 +147,16 @@ export const stocks = pgTable('stocks', {
 
     // === METADATA ===
     lastUpdated: timestamp('last_updated').defaultNow()
-});
+}, (table) => ([
+    index('stocks_dividend_yield_idx').on(table.dividendYield),
+    index('stocks_price_idx').on(table.price),
+    index('stocks_volume_idx').on(table.volume),
+    index('stocks_market_cap_idx').on(table.marketCap),
+    // index('stocks_sector_id_idx').on(table.sectorId),
+    // index('stocks_country_id_idx').on(table.countryId),
+    index('stocks_payout_ratio_idx').on(table.payoutRatio),
+    index('stocks_dividend_growth_streak_idx').on(table.dividendGrowthStreak),
+]));
 
 // Not now
 // // Dividend History - for tracking historical dividend payments
@@ -158,7 +168,9 @@ export const dividends = pgTable('dividends', {
     amount: decimal('amount', { precision: 11, scale: 6 }).notNull(),
     // use currency from stocks table, so no need to store it here
     // currency: text('currency').default('USD')
-});
+}, (table) => ([
+    index('dividends_symbol_date_idx').on(table.symbol, table.date),
+]));
 
 export const splits = pgTable('splits', {
     id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
@@ -166,7 +178,9 @@ export const splits = pgTable('splits', {
     date: date('date', { mode: 'string' }).notNull(),
     numerator: integer('numerator').notNull(),
     denominator: integer('denominator').notNull(),
-});
+}, (table) => ([
+    index('splits_symbol_date_idx').on(table.symbol, table.date),
+]));
 
 export const stockHistory = pgTable('stock_history', {
     id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
@@ -176,4 +190,6 @@ export const stockHistory = pgTable('stock_history', {
     // 12 digits total, 8 before decimal, 4 after max value 99,999,999.9999
     price: decimal('price', { precision: 12, scale: 4 }).notNull(),
     volume: bigint('volume', { mode: 'number' }).notNull(),
-});
+}, (table) => ([
+    index('stock_history_symbol_date_idx').on(table.symbol, table.date),
+]));

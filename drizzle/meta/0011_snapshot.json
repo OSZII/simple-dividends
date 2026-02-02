@@ -1,0 +1,984 @@
+{
+  "id": "0ff9abe6-fdbf-4da7-acb4-2df30982d661",
+  "prevId": "837a9d41-25e9-4007-89fc-ba11f060ed15",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.countries": {
+      "name": "countries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "countries_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "countries_name_unique": {
+          "name": "countries_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dividends": {
+      "name": "dividends",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "dividends_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "symbol": {
+          "name": "symbol",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric(11, 6)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "dividends_symbol_date_idx": {
+          "name": "dividends_symbol_date_idx",
+          "columns": [
+            {
+              "expression": "symbol",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dividends_symbol_stocks_symbol_fk": {
+          "name": "dividends_symbol_stocks_symbol_fk",
+          "tableFrom": "dividends",
+          "tableTo": "stocks",
+          "columnsFrom": [
+            "symbol"
+          ],
+          "columnsTo": [
+            "symbol"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sectors": {
+      "name": "sectors",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "sectors_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "sectors_name_unique": {
+          "name": "sectors_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.splits": {
+      "name": "splits",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "splits_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "symbol": {
+          "name": "symbol",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numerator": {
+          "name": "numerator",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "denominator": {
+          "name": "denominator",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "splits_symbol_date_idx": {
+          "name": "splits_symbol_date_idx",
+          "columns": [
+            {
+              "expression": "symbol",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "splits_symbol_stocks_symbol_fk": {
+          "name": "splits_symbol_stocks_symbol_fk",
+          "tableFrom": "splits",
+          "tableTo": "stocks",
+          "columnsFrom": [
+            "symbol"
+          ],
+          "columnsTo": [
+            "symbol"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.stock_history": {
+      "name": "stock_history",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "stock_history_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "symbol": {
+          "name": "symbol",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "numeric(12, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "volume": {
+          "name": "volume",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "stock_history_symbol_date_idx": {
+          "name": "stock_history_symbol_date_idx",
+          "columns": [
+            {
+              "expression": "symbol",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "stock_history_symbol_stocks_symbol_fk": {
+          "name": "stock_history_symbol_stocks_symbol_fk",
+          "tableFrom": "stock_history",
+          "tableTo": "stocks",
+          "columnsFrom": [
+            "symbol"
+          ],
+          "columnsTo": [
+            "symbol"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.stocks": {
+      "name": "stocks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "stocks_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "symbol": {
+          "name": "symbol",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "short_name": {
+          "name": "short_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "long_name": {
+          "name": "long_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sector_id": {
+          "name": "sector_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country_id": {
+          "name": "country_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "exchange": {
+          "name": "exchange",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'USD'"
+        },
+        "market_cap": {
+          "name": "market_cap",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "volume90d": {
+          "name": "volume90d",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "volume": {
+          "name": "volume",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dividend_rate": {
+          "name": "dividend_rate",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dividend_yield": {
+          "name": "dividend_yield",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ex_dividend_date": {
+          "name": "ex_dividend_date",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dividend_date": {
+          "name": "dividend_date",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payout_ratio": {
+          "name": "payout_ratio",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "five_year_avg_dividend_yield": {
+          "name": "five_year_avg_dividend_yield",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trailing_annual_dividend_rate": {
+          "name": "trailing_annual_dividend_rate",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trailing_annual_dividend_yield": {
+          "name": "trailing_annual_dividend_yield",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dividend_growth_1_year": {
+          "name": "dividend_growth_1_year",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dividend_growth_5_year": {
+          "name": "dividend_growth_5_year",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dividend_growth_10_year": {
+          "name": "dividend_growth_10_year",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dividend_growth_streak": {
+          "name": "dividend_growth_streak",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "uninterrupted_dividend_streak": {
+          "name": "uninterrupted_dividend_streak",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "latest_dividend_raise_date": {
+          "name": "latest_dividend_raise_date",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_frequency": {
+          "name": "payment_frequency",
+          "type": "payment_frequency",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_schedule_months": {
+          "name": "payment_schedule_months",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dividend_safety": {
+          "name": "dividend_safety",
+          "type": "dividend_safety",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dividend_safety_score": {
+          "name": "dividend_safety_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "yield_relative_to_history": {
+          "name": "yield_relative_to_history",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recession_dividend_performance": {
+          "name": "recession_dividend_performance",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "annual_total_dividends": {
+          "name": "annual_total_dividends",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recession_return": {
+          "name": "recession_return",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trailing_pe": {
+          "name": "trailing_pe",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "forward_pe": {
+          "name": "forward_pe",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_to_book": {
+          "name": "price_to_book",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_to_sales_trailing": {
+          "name": "price_to_sales_trailing",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pe_relative_to_history": {
+          "name": "pe_relative_to_history",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valuation_status": {
+          "name": "valuation_status",
+          "type": "valuation_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price": {
+          "name": "price",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "previous_close": {
+          "name": "previous_close",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fifty_two_week_high": {
+          "name": "fifty_two_week_high",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fifty_two_week_low": {
+          "name": "fifty_two_week_low",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fifty_day_average": {
+          "name": "fifty_day_average",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "two_hundred_day_average": {
+          "name": "two_hundred_day_average",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "beta": {
+          "name": "beta",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trailing_eps": {
+          "name": "trailing_eps",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "forward_eps": {
+          "name": "forward_eps",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "earnings_quarterly_growth": {
+          "name": "earnings_quarterly_growth",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "earnings_growth": {
+          "name": "earnings_growth",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "earnings_timestamp": {
+          "name": "earnings_timestamp",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profit_margins": {
+          "name": "profit_margins",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gross_margins": {
+          "name": "gross_margins",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "operating_margins": {
+          "name": "operating_margins",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "free_cashflow": {
+          "name": "free_cashflow",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "operating_cashflow": {
+          "name": "operating_cashflow",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "return_on_assets": {
+          "name": "return_on_assets",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "return_on_equity": {
+          "name": "return_on_equity",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "return_on_invested_capital": {
+          "name": "return_on_invested_capital",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "debt_to_equity": {
+          "name": "debt_to_equity",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "current_ratio": {
+          "name": "current_ratio",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quick_ratio": {
+          "name": "quick_ratio",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "net_debt_to_capital": {
+          "name": "net_debt_to_capital",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "net_debt_to_ebitda": {
+          "name": "net_debt_to_ebitda",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "credit_rating": {
+          "name": "credit_rating",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recommendation_key": {
+          "name": "recommendation_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recommendation_mean": {
+          "name": "recommendation_mean",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_mean_price": {
+          "name": "target_mean_price",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_median_price": {
+          "name": "target_median_price",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "number_of_analyst_opinions": {
+          "name": "number_of_analyst_opinions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_updated": {
+          "name": "last_updated",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "stocks_dividend_yield_idx": {
+          "name": "stocks_dividend_yield_idx",
+          "columns": [
+            {
+              "expression": "dividend_yield",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "stocks_price_idx": {
+          "name": "stocks_price_idx",
+          "columns": [
+            {
+              "expression": "price",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "stocks_volume_idx": {
+          "name": "stocks_volume_idx",
+          "columns": [
+            {
+              "expression": "volume",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "stocks_market_cap_idx": {
+          "name": "stocks_market_cap_idx",
+          "columns": [
+            {
+              "expression": "market_cap",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "stocks_payout_ratio_idx": {
+          "name": "stocks_payout_ratio_idx",
+          "columns": [
+            {
+              "expression": "payout_ratio",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "stocks_dividend_growth_streak_idx": {
+          "name": "stocks_dividend_growth_streak_idx",
+          "columns": [
+            {
+              "expression": "dividend_growth_streak",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "stocks_sector_id_sectors_id_fk": {
+          "name": "stocks_sector_id_sectors_id_fk",
+          "tableFrom": "stocks",
+          "tableTo": "sectors",
+          "columnsFrom": [
+            "sector_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "stocks_country_id_countries_id_fk": {
+          "name": "stocks_country_id_countries_id_fk",
+          "tableFrom": "stocks",
+          "tableTo": "countries",
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "stocks_symbol_unique": {
+          "name": "stocks_symbol_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "symbol"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.dividend_safety": {
+      "name": "dividend_safety",
+      "schema": "public",
+      "values": [
+        "very_unsafe",
+        "unsafe",
+        "borderline",
+        "safe",
+        "very_safe"
+      ]
+    },
+    "public.payment_frequency": {
+      "name": "payment_frequency",
+      "schema": "public",
+      "values": [
+        "monthly",
+        "quarterly",
+        "semi_annual",
+        "annual"
+      ]
+    },
+    "public.valuation_status": {
+      "name": "valuation_status",
+      "schema": "public",
+      "values": [
+        "undervalued",
+        "reasonably_valued",
+        "overvalued",
+        "speculative"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

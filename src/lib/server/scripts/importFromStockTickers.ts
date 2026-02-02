@@ -79,6 +79,17 @@ async function importStocks(silent: boolean = false) {
                 continue;
             }
 
+            if (!stockInfo.regularMarketPrice) {
+                console.warn(`[IMPORT-STOCKS]Skipping entry: no price found`);
+                continue;
+            }
+
+            // filter out zombie and penny stocks
+            if (stockInfo.regularMarketPrice * stockInfo.regularMarketVolume < 5000000) {
+                console.warn(`[IMPORT-STOCKS]Skipping entry: volume in dollars too low`);
+                continue;
+            }
+
             try {
                 const sectorId = stockInfo.sectorKey ? sectorMap.get(stockInfo.sectorKey) ?? null : null;
                 const countryId = stockInfo.country ? countryMap.get(stockInfo.country) ?? null : null;
