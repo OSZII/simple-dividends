@@ -133,15 +133,12 @@ async function calculateRecessionReturns(silent: boolean = false) {
                     .where(eq(stocks.id, stock.id));
 
                 log(`✓ ${stock.symbol}: start price=${startPrice}, end price=${endPrice}, return=${recessionReturn}%, dividends=${dividendPerformance}`);
-                return;
             } catch (error) {
                 log(`❌ Error processing ${stock.symbol}: ${error}`);
             }
 
             processedCount++;
         }
-
-
     }
 
     log('=== Calculation Complete ===');
