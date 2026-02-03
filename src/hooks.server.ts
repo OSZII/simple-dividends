@@ -4,6 +4,7 @@ import { importStocks } from './lib/server/scripts/importFromStockTickers';
 import { importStockHistory } from '$lib/server/scripts/importHistoryFromStockTickers';
 import { dev } from '$app/environment';
 import { calculateRecessionReturns } from '$lib/server/scripts/calculateRecessionReturns';
+import { importQuoteSummary } from '$lib/server/scripts/importQuoteSummary';
 
 // This runs once when the server starts
 // once a hour update stocks i basically do this to get the most recent stock price
@@ -30,6 +31,14 @@ cron.schedule('0 1 * * 7', () => {
     calculateRecessionReturns();
 });
 
+cron.schedule('0 1 * * 6', () => {
+    if (dev) {
+        return;
+    }
+    importQuoteSummary();
+});
+
+
 export const handle: Handle = async ({ event, resolve }) => {
     // get query param here
     const scriptParam = event.url.searchParams.get('script');
@@ -41,6 +50,9 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
     if (scriptParam === 'calculate-recession-returns') {
         calculateRecessionReturns();
+    }
+    if (scriptParam === 'import-quote-summary') {
+        importQuoteSummary();
     }
     const response = await resolve(event);
     return response;

@@ -25,12 +25,17 @@ export const dividendSafetyEnum = pgEnum('dividend_safety', [
 
 // Tables
 export const sectors = pgTable('sectors', {
-    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
     name: text('name').notNull().unique()
 });
 
 export const countries = pgTable('countries', {
-    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+    name: text('name').notNull().unique()
+});
+
+export const currency = pgTable('currency', {
+    id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
     name: text('name').notNull().unique()
 });
 

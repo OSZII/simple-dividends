@@ -84,6 +84,13 @@ async function calculateRecessionReturns(silent: boolean = false) {
                 // Skip if no historical data for the recession period
                 if (priceHistory.length < 2) {
                     log(`⏭ Skipping ${stock.symbol}: insufficient price data for recession period`);
+                    // insert negative value so that it is skipped in the future
+                    await db
+                        .update(stocks)
+                        .set({
+                            recessionReturn: -9999,
+                        })
+                        .where(eq(stocks.id, stock.id));
                     skippedCount++;
                     processedCount++;
                     continue;

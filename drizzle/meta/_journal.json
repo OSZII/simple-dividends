@@ -85,6 +85,20 @@
       "when": 1770062632333,
       "tag": "0011_legal_sandman",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1770140370209,
+      "tag": "0012_curvy_lady_bullseye",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1770141531224,
+      "tag": "0013_tricky_ghost_rider",
+      "breakpoints": true
     }
   ]
 }

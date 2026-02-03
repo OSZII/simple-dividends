@@ -65,28 +65,33 @@ async function importStocks(silent: boolean = false) {
         // Update each stock individually
         for (const stockInfo of stockData) {
             if (!stockInfo.symbol) {
-                console.warn(`[IMPORT-STOCKS]Skipping entry: no symbol found`);
+                await db.delete(stocks).where(eq(stocks.symbol, stockInfo.symbol));
+                console.warn(`[IMPORT-STOCKS]Skipping and deleting entry: no symbol found`);
                 continue;
             }
 
             if (!stockInfo.shortName) {
-                console.warn(`[IMPORT-STOCKS]Skipping entry: no short name found`);
+                await db.delete(stocks).where(eq(stocks.symbol, stockInfo.symbol));
+                console.warn(`[IMPORT-STOCKS]Skipping and deleting entry: no short name found`);
                 continue;
             }
 
             if (!stockInfo.regularMarketVolume) {
-                console.warn(`[IMPORT-STOCKS]Skipping entry: no volume found`);
+                await db.delete(stocks).where(eq(stocks.symbol, stockInfo.symbol));
+                console.warn(`[IMPORT-STOCKS]Skipping and deleting entry: no volume found`);
                 continue;
             }
 
             if (!stockInfo.regularMarketPrice) {
-                console.warn(`[IMPORT-STOCKS]Skipping entry: no price found`);
+                await db.delete(stocks).where(eq(stocks.symbol, stockInfo.symbol));
+                console.warn(`[IMPORT-STOCKS]Skipping and deleting entry: no price found`);
                 continue;
             }
 
             // filter out zombie and penny stocks
             if (stockInfo.regularMarketPrice * stockInfo.regularMarketVolume < 5000000) {
-                console.warn(`[IMPORT-STOCKS]Skipping entry: volume in dollars too low`);
+                await db.delete(stocks).where(eq(stocks.symbol, stockInfo.symbol));
+                console.warn(`[IMPORT-STOCKS]Skipping and deleting entry: volume in dollars too low`);
                 continue;
             }
 

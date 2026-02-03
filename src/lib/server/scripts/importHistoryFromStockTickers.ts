@@ -9,14 +9,9 @@ import { join } from 'path';
 import { mapToStockInsert } from '../db/util';
 import { isNull } from 'drizzle-orm';
 import YahooFinance from 'yahoo-finance2';
+import { delay } from './util';
 
 const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
-
-// Helper function to delay execution
-function delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 // Check if a date is older than 1 week
 function isOlderThanOneWeek(dateString: string): boolean {
     const date = new Date(dateString);
