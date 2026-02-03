@@ -39,3 +39,7 @@ Always use the Base System to create depth:
 ## 6. Interaction States
 - Rely on daisyUI defaults for `:hover` and `:active`. 
 - Only override them using semantic utilities like `hover:bg-primary-focus`.
+
+## 7. Don't write css
+- Don't write css always use tailwind, except if the user requests it.
+- If something is not possible with tailwind ask the user for approval

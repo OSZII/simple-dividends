@@ -167,7 +167,7 @@ export const stocks = pgTable('stocks', {
 // // Dividend History - for tracking historical dividend payments
 export const dividends = pgTable('dividends', {
     id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
-    symbol: text('symbol').references(() => stocks.symbol).notNull(),
+    symbol: text('symbol').references(() => stocks.symbol, { onDelete: 'cascade' }).notNull(),
     date: date('date', { mode: 'string' }).notNull(),
     // 11 digits total, 5 before decimal, 6 after max value 99,999.999999
     amount: decimal('amount', { precision: 11, scale: 6 }).notNull(),
@@ -179,7 +179,7 @@ export const dividends = pgTable('dividends', {
 
 export const splits = pgTable('splits', {
     id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
-    symbol: text('symbol').references(() => stocks.symbol).notNull(),
+    symbol: text('symbol').references(() => stocks.symbol, { onDelete: 'cascade' }).notNull(),
     date: date('date', { mode: 'string' }).notNull(),
     numerator: integer('numerator').notNull(),
     denominator: integer('denominator').notNull(),
@@ -189,7 +189,7 @@ export const splits = pgTable('splits', {
 
 export const stockHistory = pgTable('stock_history', {
     id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
-    symbol: text('symbol').references(() => stocks.symbol).notNull(),
+    symbol: text('symbol').references(() => stocks.symbol, { onDelete: 'cascade' }).notNull(),
     date: date('date', { mode: 'string' }).notNull(),
     // adjclose as close is the price of the stock adjusted for splits and dividends
     // 12 digits total, 8 before decimal, 4 after max value 99,999,999.9999

@@ -99,6 +99,13 @@
       "when": 1770141531224,
       "tag": "0013_tricky_ghost_rider",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1770151854586,
+      "tag": "0014_aspiring_brood",
+      "breakpoints": true
     }
   ]
 }

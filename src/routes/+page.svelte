@@ -2,7 +2,239 @@
 	import PageLayout from '$lib/components/layout/PageLayout.svelte';
 	import FilterDropDown from '$lib/components/FilterDropDown.svelte';
 	import FilterChip from '$lib/components/filters/FilterChip.svelte';
+	import Datatable, { type ColumnConfig, type SortState } from '$lib/components/Datatable.svelte';
 	import { Plus } from 'phosphor-svelte';
+
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
+
+	// Column configuration for the datatable
+	let columns = $state<ColumnConfig[]>([
+		{ key: 'shortName', label: 'Name', sortable: true, enabled: true, align: 'left' }, // SYMBOL and Name in one
+		{
+			key: 'price',
+			label: 'Price',
+			sortable: true,
+			enabled: true,
+			align: 'center'
+		},
+		{ key: 'sector', label: 'Sector', sortable: true, enabled: true, align: 'left' },
+		{ key: 'country', label: 'Country', sortable: true, enabled: true, align: 'left' },
+		{ key: 'symbol', label: 'Symbol', sortable: true, enabled: true, align: 'center' },
+		{
+			key: 'marketCap',
+			label: 'Market Cap',
+			sortable: true,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'beta',
+			label: 'Beta',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'valuation',
+			label: 'Valuation',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'dividendYield',
+			label: 'Dividend Yield',
+			sortable: true,
+			enabled: true,
+			align: 'center',
+			renderType: 'percent'
+		},
+		{
+			key: 'peRatio',
+			label: 'P/E Ratio',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'fiftyTwoWeekRange',
+			label: '52-Week Range',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'dividendSafety', // here add the slider min and max price and add a dot where the current price is
+			label: 'Dividend Safety',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'dividendGrowth1Year',
+			label: 'Dividend Growth',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'dividendGrowth5Year',
+			label: '5-Year Dividend Growth',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'dividendGrowth10Year',
+			label: '10-Year Dividend Growth',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'dividendGrowthStreak',
+			label: 'Dividend Growth Streak',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'uninterruptedDividendStreak',
+			label: 'Uninterrupted Dividend Streak',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'exDividendDate',
+			label: 'Ex-Dividend Date',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'paymentFrequency',
+			label: 'Payment Frequency',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'paymentScheduleMonths',
+			label: 'Payment Schedule',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'creditRating',
+			label: 'Credit Rating',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'payoutRatio',
+			label: 'Payout Ratio',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'netDebtToCapital',
+			label: 'Net Debt to Capital',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'netDebtToEbitda',
+			label: 'Net Debt to EBITDA',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'freeCashflow',
+			label: 'Free Cashflow',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'returnOnInvestedCapital',
+			label: 'Return on Invested Capital',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'recessionDividendPerformance',
+			label: 'Recession Dividend Performance',
+			sortable: false,
+			enabled: true,
+			align: 'center'
+		},
+		{
+			key: 'recessionReturn',
+			label: 'Recession Return',
+			sortable: false,
+			enabled: true,
+			align: 'center',
+			renderType: 'percent'
+		}
+	]);
+
+	// Sort state for database integration
+	let sortState = $state<SortState>({ column: null, direction: null });
+
+	function handleSortChange(newState: SortState) {
+		sortState = newState;
+		// TODO: Connect this to database query
+		console.log('Sort changed:', newState);
+	}
+
+	let stockData = $derived.by(() => {
+		let stockData = [...data.stocks];
+		let countries = data.countries;
+		let sectors = data.sectors;
+
+		let mappedStockData = stockData.map((stock) => {
+			let returnObj: any = {};
+			returnObj.dividendYield = Number(stock.dividendYield) / 100;
+			returnObj.country = countries.find((country) => country.id === stock.countryId)?.name;
+			let sector = sectors.find((sector) => sector.id === stock.sectorId)?.name;
+
+			let split = sector?.split('-');
+			let sectorString = '';
+			split?.forEach((word, index) => {
+				sectorString += word.charAt(0).toUpperCase() + word.slice(1) + ' ';
+			});
+
+			returnObj.recessionDividendPerformance =
+				stock.recessionDividendPerformance === 'no_dividend'
+					? null
+					: stock.recessionDividendPerformance;
+
+			returnObj.recessionDividendPerformance = returnObj.recessionDividendPerformance / 100;
+
+			returnObj.recessionReturn =
+				stock.recessionReturn === null ? null : stock.recessionReturn / 100;
+
+			returnObj.fiftyTwoWeekRange = `${stock.fiftyTwoWeekLow} - ${stock.fiftyTwoWeekHigh} ${stock.currency}`;
+
+			console.log(returnObj.sector);
+
+			return {
+				...stock,
+				...returnObj
+			};
+		});
+
+		return mappedStockData;
+	});
 
 	// Initial filters state
 	let filters = $state<Filter[]>([
@@ -14,7 +246,7 @@
 			selected: [],
 			filterDescription: 'Show companies whose dividend appears...',
 			infotext:
-				'Our Dividend Safety Scores look at a company’s financial metrics to evaluate how secure its dividend appears over a full economic cycle.',
+				"Our Dividend Safety Scores look at a company's financial metrics to evaluate how secure its dividend appears over a full economic cycle.",
 			options: [
 				{ value: 'very_safe', label: 'Very Safe', description: 'a cut is highly unlikely' },
 				{ value: 'safe', label: 'Safe', description: 'a cut is unlikely' },
@@ -251,9 +483,16 @@
 		</div>
 
 		<!-- Debug info -->
-		<div class="mt-8 w-full max-w-md rounded-lg bg-base-200 p-4">
+		<!-- <div class="mt-8 w-full max-w-md rounded-lg bg-base-200 p-4">
 			<h3 class="mb-2 font-bold">Active Filters for API:</h3>
 			<pre class="text-xs">{JSON.stringify(activeFilters, null, 2)}</pre>
-		</div>
+		</div> -->
+		<Datatable
+			totalCount={stockData.length}
+			data={stockData}
+			{columns}
+			{sortState}
+			onSortChange={handleSortChange}
+		/>
 	</div>
 </PageLayout>
