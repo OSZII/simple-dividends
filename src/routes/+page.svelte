@@ -4,6 +4,7 @@
 	import FilterChip from '$lib/components/filters/FilterChip.svelte';
 	import Datatable, { type ColumnConfig, type SortState } from '$lib/components/Datatable.svelte';
 	import { Plus } from 'phosphor-svelte';
+	import { format } from 'date-fns';
 
 	import type { PageProps } from './$types';
 
@@ -17,7 +18,8 @@
 			label: 'Price',
 			sortable: true,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			renderType: 'currency'
 		},
 		{ key: 'sector', label: 'Sector', sortable: true, enabled: true, align: 'left' },
 		{ key: 'country', label: 'Country', sortable: true, enabled: true, align: 'left' },
@@ -205,7 +207,6 @@
 
 		let mappedStockData = stockData.map((stock) => {
 			let returnObj: any = {};
-			returnObj.dividendYield = Number(stock.dividendYield) / 100;
 			returnObj.country = countries.find((country) => country.id === stock.countryId)?.name;
 			let sector = sectors.find((sector) => sector.id === stock.sectorId)?.name;
 
@@ -214,21 +215,71 @@
 			split?.forEach((word, index) => {
 				sectorString += word.charAt(0).toUpperCase() + word.slice(1) + ' ';
 			});
-			// console.log('sector', sectorString);
 
-			returnObj.recessionDividendPerformance =
-				stock.recessionDividendPerformance === 'no_dividend'
-					? null
-					: stock.recessionDividendPerformance;
+			if (stock.recessionReturn !== null && stock.recessionReturn !== -9999) {
+				returnObj.recessionReturn = stock.recessionReturn / 100;
+			} else {
+				returnObj.recessionReturn = null;
+			}
 
-			returnObj.recessionDividendPerformance = returnObj.recessionDividendPerformance / 100;
+			returnObj.fiftyTwoWeekRange = `${stock.fiftyTwoWeekLow?.toFixed(2)} - ${stock.fiftyTwoWeekHigh?.toFixed(2)} ${stock.currency}`;
 
-			returnObj.recessionReturn =
-				stock.recessionReturn === null ? null : stock.recessionReturn / 100;
+			if (stock.dividendDate !== null) {
+				returnObj.dividendDate = format(new Date(stock.dividendDate), 'MMM dd, yyyy');
+			}
 
-			returnObj.fiftyTwoWeekRange = `${stock.fiftyTwoWeekLow} - ${stock.fiftyTwoWeekHigh} ${stock.currency}`;
+			if (stock.forwardPE !== null && stock.forwardPE !== -9999) {
+				returnObj.peRatio = `${stock.forwardPE.toFixed(2)}-${stock.trailingPE?.toFixed(2) ?? '-'}`;
+			} else {
+				returnObj.peRatio = null;
+			}
 
-			// console.log(returnObj.coun);
+			if (stock.marketCap) {
+				returnObj.marketCap = new Intl.NumberFormat('en-US', {
+					style: 'currency',
+					currency: 'USD',
+					maximumFractionDigits: 0,
+					notation: 'compact',
+					compactDisplay: 'short'
+				}).format(stock.marketCap);
+			} else {
+				returnObj.marketCap = null;
+			}
+
+			if (
+				stock.recessionDividendPerformance === 'no_dividend' ||
+				stock.recessionDividendPerformance === null
+			) {
+				returnObj.recessionDividendPerformance = null;
+			}
+			if (stock.recessionDividendPerformance === 'increased') {
+				returnObj.recessionDividendPerformance = 'Increased';
+			}
+			if (stock.recessionDividendPerformance === 'cut') {
+				returnObj.recessionDividendPerformance = 'Cut';
+			}
+			if (stock.recessionDividendPerformance === 'maintained') {
+				returnObj.recessionDividendPerformance = 'Maintained';
+			}
+
+			if (stock.dividendYield) {
+				returnObj.dividendYield = stock.dividendYield / 100;
+			}
+
+			returnObj.netDebtToCapital = stock.netDebtToCapital?.toFixed(2);
+
+			returnObj.payoutRatio = stock.payoutRatio?.toFixed(2);
+			if (stock.freeCashflow) {
+				returnObj.freeCashflow = new Intl.NumberFormat('en-US', {
+					style: 'currency',
+					currency: 'USD',
+					maximumFractionDigits: 0,
+					notation: 'compact',
+					compactDisplay: 'short'
+				}).format(stock.freeCashflow);
+			} else {
+				returnObj.freeCashflow = null;
+			}
 
 			return {
 				...stock,

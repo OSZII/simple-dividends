@@ -43,6 +43,7 @@
 	},
 	"dependencies": {
 		"bits-ui": "^2.15.4",
+		"date-fns": "^4.1.0",
 		"node-cron": "^4.2.1",
 		"phosphor-svelte": "^3.1.0",
 		"postgres": "^3.4.7",

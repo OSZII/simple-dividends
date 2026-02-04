@@ -26,10 +26,7 @@ async function importQuoteSummary() {
         const stocksToImport = await db
             .select({ symbol: stocks.symbol }).from(stocks)
             .where(
-                or(
-                    isNull(stocks.countryId),
-                    isNull(stocks.sectorId),
-                )
+                isNull(stocks.beta),
             )
 
         log(`Found ${stocksToImport.length} stocks to import`);
