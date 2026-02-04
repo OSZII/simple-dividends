@@ -101,6 +101,8 @@ export const stocks = pgTable('stocks', {
     // 5 steps compared to S&P 500 very good, good, average, poor, very poor
     recessionReturn: real('recession_return'), // performance during recession %
 
+    analystRating: real('analyst_rating'), // 1-5 averageAnalystRating
+
     // === VALUATION ===
     trailingPE: real('trailing_pe'),
     forwardPE: real('forward_pe'),
@@ -130,24 +132,24 @@ export const stocks = pgTable('stocks', {
     grossMargins: real('gross_margins'),
     operatingMargins: real('operating_margins'),
     freeCashflow: bigint('free_cashflow', { mode: 'number' }),
-    operatingCashflow: bigint('operating_cashflow', { mode: 'number' }),
     returnOnAssets: real('return_on_assets'),
     returnOnEquity: real('return_on_equity'),
     returnOnInvestedCapital: real('return_on_invested_capital'), // ROIC
 
     // Debt Metrics
+    totalDebt: bigint('total_debt', { mode: 'number' }),
+    totalCash: bigint('total_cash', { mode: 'number' }),
     debtToEquity: real('debt_to_equity'),
     currentRatio: real('current_ratio'),
     quickRatio: real('quick_ratio'),
     netDebtToCapital: real('net_debt_to_capital'),
     netDebtToEbitda: real('net_debt_to_ebitda'),
     creditRating: text('credit_rating'), // e.g., "AAA", "BBB+", etc.
+    ebitda: bigint('ebitda', { mode: 'number' }),
+
 
     // === ANALYST DATA ===
-    recommendationKey: text('recommendation_key'), // "buy", "hold", "sell"
-    recommendationMean: real('recommendation_mean'),
-    targetMeanPrice: real('target_mean_price'),
-    targetMedianPrice: real('target_median_price'),
+    recommendation: text('recommendation'), // "buy", "hold", "sell"
     numberOfAnalystOpinions: integer('number_of_analyst_opinions'),
 
     // === METADATA ===

@@ -15,16 +15,6 @@ const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 async function importStocks(silent: boolean = false) {
     console.log('[IMPORT-STOCKS]Starting stocks update...');
 
-    // Build lookup maps for sectors and countries
-    const sectorRows = await db.select().from(sectors);
-    const countryRows = await db.select().from(countries);
-
-    const sectorMap = new Map<string, number>();
-    sectorRows.forEach((s) => sectorMap.set(s.name, s.id));
-
-    const countryMap = new Map<string, number>();
-    countryRows.forEach((c) => countryMap.set(c.name, c.id));
-
     // Get all existing symbols from the database
     const symbolsRows = await db.select({ id: stocks.id, symbol: stocks.symbol })
         .from(stocks);
@@ -96,11 +86,7 @@ async function importStocks(silent: boolean = false) {
             }
 
             try {
-                const sectorId = stockInfo.sectorKey ? sectorMap.get(stockInfo.sectorKey) ?? null : null;
-                const countryId = stockInfo.country ? countryMap.get(stockInfo.country) ?? null : null;
-
-                const updateData: typeof stocks.$inferInsert = mapToStockInsert(stockInfo, sectorId, countryId);
-
+                const updateData: typeof stocks.$inferInsert = mapToStockInsert(stockInfo);
                 // date in this format: 2026-01-31 10:20:41.258000
                 updateData.lastUpdated = new Date();
 

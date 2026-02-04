@@ -27,8 +27,7 @@ async function calculateRecessionReturns(silent: boolean = false) {
             isNull(stocks.recessionReturn)
         ));
 
-    // const totalStockCount = stockCountResult[0].count;
-    const totalStockCount = 1;
+    const totalStockCount = stockCountResult[0].count;
     log(`Found ${totalStockCount} stocks with shortName and volume`);
     log(`Processing in batches of ${BATCH_SIZE}`);
 

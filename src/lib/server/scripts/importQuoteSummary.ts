@@ -3,9 +3,8 @@ import { stocks, stockHistory, dividends as dividendsTable, countries as countri
 import { eq, and, gte, lte, isNotNull, isNull, count, asc, or, desc } from 'drizzle-orm';
 import YahooFinance from 'yahoo-finance2';
 import { delay } from './util';
-import { dev } from '$app/environment';
 
-const DELAY = 2000;
+const DELAY = 7000;
 
 async function importQuoteSummary() {
 
@@ -48,7 +47,7 @@ async function importQuoteSummary() {
                 let quoteSummary;
                 try {
                     quoteSummary = await yahooFinance.quoteSummary(stockData.symbol, {
-                        modules: ['assetProfile']
+                        modules: ['assetProfile', 'summaryDetail', "financialData"]
                     });
                 } catch (apiError) {
                     logError(`Failed to fetch quote summary for ${stockData.symbol}`, apiError);
@@ -99,11 +98,44 @@ async function importQuoteSummary() {
                     sectorId = 1;
                 }
 
+                let beta = quoteSummary.summaryDetail?.beta;
+                let freeCashflow = quoteSummary.financialData?.freeCashflow;
+                let ebitda = quoteSummary.financialData?.ebitda;
+                let totalCash = quoteSummary.financialData?.totalCash;
+                let totalDebt = quoteSummary.financialData?.totalDebt;
+                let recommendation = quoteSummary.financialData?.recommendationKey;
+                let numberOfAnalystOpinions = quoteSummary.financialData?.numberOfAnalystOpinions;
+                let debtToEquity = quoteSummary.financialData?.debtToEquity;
+                let netDebtToEbitda = null;
+                if (totalDebt && totalCash && ebitda) {
+                    netDebtToEbitda = (totalDebt - totalCash) / ebitda;
+                }
+                let netDebtToCapital = null;
+                let totalEquity = null;
+                let totalCapital = null;
+                if (totalDebt && debtToEquity) {
+                    totalEquity = totalDebt / (debtToEquity / 100);
+                    totalCapital = totalDebt + totalEquity;
+                    netDebtToCapital = totalDebt / totalCapital;
+                }
+                let payoutRatio = quoteSummary.summaryDetail?.payoutRatio;
+
                 try {
                     await db.update(stocks)
                         .set({
                             countryId,
-                            sectorId
+                            sectorId,
+                            beta,
+                            freeCashflow,
+                            ebitda,
+                            totalCash,
+                            totalDebt,
+                            netDebtToEbitda,
+                            recommendation,
+                            numberOfAnalystOpinions,
+                            debtToEquity,
+                            netDebtToCapital,
+                            payoutRatio,
                         })
                         .where(eq(stocks.symbol, stockData.symbol));
                     successCount++;

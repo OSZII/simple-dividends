@@ -10,7 +10,6 @@ export const load: PageServerLoad = async ({ params }) => {
         .limit(30);
     let sectors = await db.select().from(sectorsTable);
     let countries = await db.select().from(countriesTable);
-    console.log(stocks);
 
     return {
         stocks,

@@ -36,13 +36,13 @@
 			enabled: true,
 			align: 'center'
 		},
-		{
-			key: 'valuation',
-			label: 'Valuation',
-			sortable: false,
-			enabled: true,
-			align: 'center'
-		},
+		// {
+		// 	key: 'valuation',
+		// 	label: 'Valuation',
+		// 	sortable: false,
+		// 	enabled: true,
+		// 	align: 'center'
+		// },
 		{
 			key: 'dividendYield',
 			label: 'Dividend Yield',
@@ -108,7 +108,7 @@
 			align: 'center'
 		},
 		{
-			key: 'exDividendDate',
+			key: 'dividendDate',
 			label: 'Ex-Dividend Date',
 			sortable: false,
 			enabled: true,
@@ -128,13 +128,13 @@
 			enabled: true,
 			align: 'center'
 		},
-		{
-			key: 'creditRating',
-			label: 'Credit Rating',
-			sortable: false,
-			enabled: true,
-			align: 'center'
-		},
+		// {
+		// 	key: 'creditRating',
+		// 	label: 'Credit Rating',
+		// 	sortable: false,
+		// 	enabled: true,
+		// 	align: 'center'
+		// },
 		{
 			key: 'payoutRatio',
 			label: 'Payout Ratio',
@@ -200,6 +200,8 @@
 		let stockData = [...data.stocks];
 		let countries = data.countries;
 		let sectors = data.sectors;
+		console.log(sectors);
+		console.log(countries);
 
 		let mappedStockData = stockData.map((stock) => {
 			let returnObj: any = {};
@@ -212,6 +214,7 @@
 			split?.forEach((word, index) => {
 				sectorString += word.charAt(0).toUpperCase() + word.slice(1) + ' ';
 			});
+			// console.log('sector', sectorString);
 
 			returnObj.recessionDividendPerformance =
 				stock.recessionDividendPerformance === 'no_dividend'
@@ -225,7 +228,7 @@
 
 			returnObj.fiftyTwoWeekRange = `${stock.fiftyTwoWeekLow} - ${stock.fiftyTwoWeekHigh} ${stock.currency}`;
 
-			console.log(returnObj.sector);
+			// console.log(returnObj.coun);
 
 			return {
 				...stock,
