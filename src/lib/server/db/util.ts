@@ -14,14 +14,11 @@ export function mapToStockInsert(stockInfo: any): typeof stocks.$inferInsert {
     };
 
     // Basic Info
-    addIfValid('shortName', stockInfo.shortName);
-    addIfValid('longName', stockInfo.longName);
-    addIfValid('exchange', stockInfo.exchange);
+    addIfValid('name', stockInfo.shortName);
     addIfValid('currency', stockInfo.currency);
     addIfValid('marketCap', stockInfo.marketCap);
 
     // Dividend Data
-    addIfValid('dividendRate', stockInfo.dividendRate);
     addIfValid('dividendYield', stockInfo.dividendYield);
     if (stockInfo.exDividendDate) {
         addIfValid('exDividendDate', new Date(stockInfo.exDividendDate).getTime());
@@ -30,11 +27,14 @@ export function mapToStockInsert(stockInfo: any): typeof stocks.$inferInsert {
         addIfValid('dividendDate', new Date(stockInfo.dividendDate).getTime());
     }
     addIfValid('payoutRatio', stockInfo.payoutRatio);
-    addIfValid('fiveYearAvgDividendYield', stockInfo.fiveYearAvgDividendYield);
-    addIfValid('trailingAnnualDividendRate', stockInfo.trailingAnnualDividendRate);
-    addIfValid('trailingAnnualDividendYield', stockInfo.trailingAnnualDividendYield);
 
-    addIfValid('analystRating', stockInfo.averageAnalystRating);
+    // Parse analyst rating from string like "2.0 - Buy"
+    if (stockInfo.averageAnalystRating) {
+        const match = stockInfo.averageAnalystRating.match(/^([\d.]+)/);
+        if (match) {
+            addIfValid('analystRating', parseFloat(match[1]));
+        }
+    }
 
     // Dividend Growth & Streaks
     addIfValid('dividendGrowth1Year', stockInfo.dividendGrowth1Year);
@@ -44,25 +44,19 @@ export function mapToStockInsert(stockInfo: any): typeof stocks.$inferInsert {
     addIfValid('uninterruptedDividendStreak', stockInfo.uninterruptedDividendStreak);
     addIfValid('latestDividendRaiseDate', stockInfo.latestDividendRaiseDate);
 
-    // Yield Analysis
-    addIfValid('yieldRelativeToHistory', stockInfo.yieldRelativeToHistory);
-
     // Valuation
-    addIfValid('trailingPE', stockInfo.trailingPE);
-    addIfValid('forwardPE', stockInfo.forwardPE);
     addIfValid('priceToBook', stockInfo.priceToBook);
     addIfValid('priceToSalesTrailing12Months', stockInfo.priceToSalesTrailing12Months);
     addIfValid('peRelativeToHistory', stockInfo.peRelativeToHistory);
-    addIfValid('valuationStatus', stockInfo.valuationStatus);
 
     // Price Data
     const price = stockInfo.currentPrice ?? stockInfo.regularMarketPrice;
     addIfValid('price', price);
-    addIfValid('previousClose', stockInfo.previousClose);
+    // Use regularMarketPreviousClose from quote API
+    const previousClose = stockInfo.regularMarketPreviousClose ?? stockInfo.previousClose;
+    addIfValid('previousClose', previousClose);
     addIfValid('fiftyTwoWeekHigh', stockInfo.fiftyTwoWeekHigh);
     addIfValid('fiftyTwoWeekLow', stockInfo.fiftyTwoWeekLow);
-    addIfValid('fiftyDayAverage', stockInfo.fiftyDayAverage);
-    addIfValid('twoHundredDayAverage', stockInfo.twoHundredDayAverage);
 
     // Volume
     addIfValid('volume90d', stockInfo.averageDailyVolume3Month);
@@ -84,24 +78,15 @@ export function mapToStockInsert(stockInfo: any): typeof stocks.$inferInsert {
     addIfValid('grossMargins', stockInfo.grossMargins);
     addIfValid('operatingMargins', stockInfo.operatingMargins);
     addIfValid('freeCashflow', stockInfo.freeCashflow);
-    addIfValid('operatingCashflow', stockInfo.operatingCashflow);
-    addIfValid('returnOnAssets', stockInfo.returnOnAssets);
-    addIfValid('returnOnEquity', stockInfo.returnOnEquity);
     addIfValid('returnOnInvestedCapital', stockInfo.returnOnInvestedCapital);
 
     // Debt Metrics
     addIfValid('debtToEquity', stockInfo.debtToEquity);
-    addIfValid('currentRatio', stockInfo.currentRatio);
-    addIfValid('quickRatio', stockInfo.quickRatio);
     addIfValid('netDebtToCapital', stockInfo.netDebtToCapital);
     addIfValid('netDebtToEbitda', stockInfo.netDebtToEbitda);
     addIfValid('creditRating', stockInfo.creditRating);
 
     // Analyst Data
-    addIfValid('recommendationKey', stockInfo.recommendationKey);
-    addIfValid('recommendationMean', stockInfo.recommendationMean);
-    addIfValid('targetMeanPrice', stockInfo.targetMeanPrice);
-    addIfValid('targetMedianPrice', stockInfo.targetMedianPrice);
     addIfValid('numberOfAnalystOpinions', stockInfo.numberOfAnalystOpinions);
 
     return object;

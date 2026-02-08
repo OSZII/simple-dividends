@@ -1,0 +1,1 @@
+ALTER TABLE "stocks" ALTER COLUMN "sector" SET DATA TYPE text;

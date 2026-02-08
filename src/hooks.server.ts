@@ -5,10 +5,12 @@ import { importStockHistory } from '$lib/server/scripts/importHistoryFromStockTi
 import { dev } from '$app/environment';
 import { calculateRecessionReturns } from '$lib/server/scripts/calculateRecessionReturns';
 import { importQuoteSummary } from '$lib/server/scripts/importQuoteSummary';
+import type { ServerInit } from '@sveltejs/kit';
+import { calculateDividendMetrics } from '$lib/server/scripts/calculateDividendMetrics';
+import { stocks } from '$lib/server/db/schema';
+import { getTableColumns } from 'drizzle-orm';
 
-// This runs once when the server starts
-// once a hour update stocks i basically do this to get the most recent stock price
-cron.schedule('0 * * * *', () => {
+cron.schedule('0 * * * 1-5', () => {
     if (dev) {
         return;
     }
@@ -38,6 +40,14 @@ cron.schedule('0 1 * * 6', () => {
     importQuoteSummary();
 });
 
+// weekly sunday
+cron.schedule('0 0 * * 0', () => {
+    if (dev) {
+        return;
+    }
+    calculateDividendMetrics();
+});
+
 
 export const handle: Handle = async ({ event, resolve }) => {
     // get query param here
@@ -54,6 +64,10 @@ export const handle: Handle = async ({ event, resolve }) => {
     if (scriptParam === 'import-quote-summary') {
         importQuoteSummary();
     }
+    if (scriptParam === 'calculate-dividend-metrics') {
+        calculateDividendMetrics();
+    }
+
     const response = await resolve(event);
     return response;
 };

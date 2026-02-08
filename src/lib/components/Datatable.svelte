@@ -9,6 +9,8 @@
 		width?: string;
 		align?: 'left' | 'center' | 'right';
 		renderType?: 'text' | 'currency' | 'percent' | 'badge' | 'chart';
+		// this is to modify values on the table confic level
+		modify?: (value: any) => any;
 	}
 
 	export interface SortState {
@@ -20,6 +22,7 @@
 <script lang="ts">
 	import { CaretUp, CaretDown, Columns, Export } from 'phosphor-svelte';
 	import ColumnModal from './ColumnModal.svelte';
+	import RangeDisplay from './DataTableDisplays/RangeDisplay.svelte';
 
 	interface Props {
 		columns: ColumnConfig[];
@@ -121,7 +124,9 @@
 				<tr class="bg-primary text-primary-content">
 					{#each enabledColumns as column (column.key)}
 						<th
-							class="select-none whitespace-nowrap px-4 py-3 text-sm font-semibold"
+							class="{column.key === 'name'
+								? 'sticky left-0 bg-primary z-10 table-fixed min-w-[250px]'
+								: ''} select-none whitespace-nowrap px-4 py-3 text-sm font-semibold"
 							class:cursor-pointer={column.sortable}
 							class:hover:brightness-90={column.sortable}
 							onclick={() => handleColumnClick(column)}
@@ -135,7 +140,7 @@
 								<span>{column.label}</span>
 								{#if column.sortable}
 									<span
-										class="inline-flex flex-col"
+										class="flex flex-col z-0"
 										class:opacity-100={getSortIcon(column) !== null}
 										class:opacity-40={getSortIcon(column) === null}
 									>
@@ -159,8 +164,28 @@
 				{#each data as row, rowIndex (rowIndex)}
 					<tr class="border-b border-base-200 hover:bg-base-200">
 						{#each enabledColumns as column (column.key)}
-							<td class="px-4 py-3 text-sm" style:text-align={column.align || 'left'}>
-								{formatCellValue(row[column.key], column)}
+							<td
+								class="{column.key === 'name'
+									? 'sticky left-0 bg-base-300 z-10'
+									: ''} px-4 py-3 text-sm"
+								style:text-align={column.align || 'left'}
+							>
+								{#if column.key === 'fiftyTwoWeekRange'}
+									<RangeDisplay
+										min={row.fiftyTwoWeekLow}
+										max={row.fiftyTwoWeekHigh}
+										current={row.price}
+									/>
+								{:else if column.key === 'name'}
+									<p class="text-sm">{row.symbol}</p>
+									<a href="/company/{row.ticker}" class="max-w-[150px] truncate"
+										>{row[column.key]}</a
+									>
+								{:else if column.modify && row[column.key]}
+									{column.modify(row[column.key])}
+								{:else}
+									{formatCellValue(row[column.key], column)}
+								{/if}
 							</td>
 						{/each}
 					</tr>
@@ -171,4 +196,4 @@
 </div>
 
 <!-- Column Modal -->
-<ColumnModal bind:open={showColumnModal} bind:columns />
+<ColumnModal bind:open={showColumnModal} {columns} />

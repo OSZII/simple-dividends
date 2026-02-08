@@ -19,7 +19,8 @@
 		"db:import-sectors": "tsx scripts/import-sectors.ts",
 		"db:import-countries": "tsx scripts/import-countries.ts",
 		"db:import-stockinfo": "tsx scripts/import-stockinfo.ts",
-		"db:import-unique-stock-symbols-and-stockinfo": "tsx scripts/fetch-and-import-unique-stock-symbols.ts"
+		"db:import-unique-stock-symbols-and-stockinfo": "tsx scripts/fetch-and-import-unique-stock-symbols.ts",
+		"db:calculate-dividend-metrics": "npx tsx src/lib/server/scripts/calculateDividendMetrics.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^5.4.0",
@@ -44,9 +45,11 @@
 	"dependencies": {
 		"bits-ui": "^2.15.4",
 		"date-fns": "^4.1.0",
+		"lru-cache": "^11.2.5",
 		"node-cron": "^4.2.1",
 		"phosphor-svelte": "^3.1.0",
 		"postgres": "^3.4.7",
+		"valibot": "^1.2.0",
 		"yahoo-finance2": "^3.13.0"
 	},
 	"engines": {

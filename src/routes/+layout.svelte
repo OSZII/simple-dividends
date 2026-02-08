@@ -21,7 +21,7 @@
 	{/if}
 </svelte:head>
 
-<div class="flex min-h-screen flex-col bg-[#0a0a0f]">
+<div class="flex min-h-screen flex-col bg-base">
 	<!-- Sidebar -->
 	<Navbar />
 

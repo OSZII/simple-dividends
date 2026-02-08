@@ -22,9 +22,9 @@ async function calculateRecessionReturns(silent: boolean = false) {
         .select({ count: count() })
         .from(stocks)
         .where(and(
-            isNotNull(stocks.shortName),
+            isNotNull(stocks.name),
             isNotNull(stocks.volume),
-            isNull(stocks.recessionReturn)
+            isNull(stocks.totalRecessionReturn)
         ));
 
     const totalStockCount = stockCountResult[0].count;
@@ -43,13 +43,13 @@ async function calculateRecessionReturns(silent: boolean = false) {
             .select({
                 id: stocks.id,
                 symbol: stocks.symbol,
-                shortName: stocks.shortName
+                name: stocks.name
             })
             .from(stocks)
             .where(and(
-                isNotNull(stocks.shortName),
+                isNotNull(stocks.name),
                 isNotNull(stocks.volume),
-                isNull(stocks.recessionReturn)
+                isNull(stocks.totalRecessionReturn)
             ))
             .limit(BATCH_SIZE);
 
@@ -87,7 +87,7 @@ async function calculateRecessionReturns(silent: boolean = false) {
                     await db
                         .update(stocks)
                         .set({
-                            recessionReturn: -9999,
+                            totalRecessionReturn: -9999,
                         })
                         .where(eq(stocks.id, stock.id));
                     skippedCount++;
@@ -132,9 +132,8 @@ async function calculateRecessionReturns(silent: boolean = false) {
                 await db
                     .update(stocks)
                     .set({
-                        recessionReturn, // Round to 2 decimal places
+                        totalRecessionReturn: recessionReturn, // Round to 2 decimal places
                         recessionDividendPerformance: dividendPerformance,
-                        annualTotalDividends: analysis.annualTotals
                     })
                     .where(eq(stocks.id, stock.id));
 

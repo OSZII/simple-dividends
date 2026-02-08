@@ -5,14 +5,17 @@
 	import Datatable, { type ColumnConfig, type SortState } from '$lib/components/Datatable.svelte';
 	import { Plus } from 'phosphor-svelte';
 	import { format } from 'date-fns';
+	import { getStocks, type SortableColumnKey } from '$lib/stocks.remote';
 
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
+	let totalCount = $state(data.count);
+
 	// Column configuration for the datatable
 	let columns = $state<ColumnConfig[]>([
-		{ key: 'shortName', label: 'Name', sortable: true, enabled: true, align: 'left' }, // SYMBOL and Name in one
+		{ key: 'name', label: 'Name', sortable: true, enabled: true, align: 'left' }, // SYMBOL and Name in one
 		{
 			key: 'price',
 			label: 'Price',
@@ -22,21 +25,31 @@
 			renderType: 'currency'
 		},
 		{ key: 'sector', label: 'Sector', sortable: true, enabled: true, align: 'left' },
-		{ key: 'country', label: 'Country', sortable: true, enabled: true, align: 'left' },
-		{ key: 'symbol', label: 'Symbol', sortable: true, enabled: true, align: 'center' },
 		{
 			key: 'marketCap',
 			label: 'Market Cap',
 			sortable: true,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			modify: (value: number) => {
+				return new Intl.NumberFormat('en-US', {
+					style: 'currency',
+					currency: 'USD',
+					maximumFractionDigits: 2,
+					notation: 'compact',
+					compactDisplay: 'short'
+				}).format(value);
+			}
 		},
 		{
 			key: 'beta',
 			label: 'Beta',
 			sortable: false,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			modify: (value: number) => {
+				return value.toFixed(2);
+			}
 		},
 		// {
 		// 	key: 'valuation',
@@ -51,14 +64,20 @@
 			sortable: true,
 			enabled: true,
 			align: 'center',
-			renderType: 'percent'
+			renderType: 'percent',
+			modify: (value: number) => {
+				return value.toFixed(2) + '%';
+			}
 		},
 		{
 			key: 'peRatio',
 			label: 'P/E Ratio',
 			sortable: false,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			modify: (value: number) => {
+				return value.toFixed(2);
+			}
 		},
 		{
 			key: 'fiftyTwoWeekRange',
@@ -79,21 +98,30 @@
 			label: 'Dividend Growth',
 			sortable: false,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			modify: (value: number) => {
+				return (value * 100).toFixed(1) + '%';
+			}
 		},
 		{
 			key: 'dividendGrowth5Year',
 			label: '5-Year Dividend Growth',
 			sortable: false,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			modify: (value: number) => {
+				return (value * 100).toFixed(1) + '%';
+			}
 		},
 		{
 			key: 'dividendGrowth10Year',
 			label: '10-Year Dividend Growth',
 			sortable: false,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			modify: (value: number) => {
+				return (value * 100).toFixed(1) + '%';
+			}
 		},
 		{
 			key: 'dividendGrowthStreak',
@@ -114,7 +142,14 @@
 			label: 'Ex-Dividend Date',
 			sortable: false,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			modify: (value: number) => {
+				// show month and day
+				return Intl.DateTimeFormat('en-US', {
+					month: 'short',
+					day: 'numeric'
+				}).format(new Date(value));
+			}
 		},
 		{
 			key: 'paymentFrequency',
@@ -149,21 +184,36 @@
 			label: 'Net Debt to Capital',
 			sortable: false,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			modify: (value: number) => {
+				return value.toFixed(2);
+			}
 		},
 		{
 			key: 'netDebtToEbitda',
 			label: 'Net Debt to EBITDA',
 			sortable: false,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			modify: (value: number) => {
+				return value.toFixed(2);
+			}
 		},
 		{
 			key: 'freeCashflow',
 			label: 'Free Cashflow',
 			sortable: false,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			modify: (value: number) => {
+				return new Intl.NumberFormat('en-US', {
+					style: 'currency',
+					currency: 'USD',
+					maximumFractionDigits: 2,
+					notation: 'compact',
+					compactDisplay: 'short'
+				}).format(value);
+			}
 		},
 		{
 			key: 'returnOnInvestedCapital',
@@ -180,114 +230,45 @@
 			align: 'center'
 		},
 		{
-			key: 'recessionReturn',
+			key: 'totalRecessionReturn',
 			label: 'Recession Return',
 			sortable: false,
 			enabled: true,
 			align: 'center',
-			renderType: 'percent'
+			modify: (value: number) => {
+				if (value === -9999) {
+					return '—';
+				}
+				return value.toFixed(1) + '%';
+			}
 		}
 	]);
 
 	// Sort state for database integration
 	let sortState = $state<SortState>({ column: null, direction: null });
 
-	function handleSortChange(newState: SortState) {
+	let initialStockData = $state(data.stocks);
+	let newStockData = $state<any[]>([]);
+
+	async function handleSortChange(newState: SortState) {
 		sortState = newState;
+		console.log('sort change');
+
+		let stocks = await getStocks({
+			column: newState.column as SortableColumnKey | null,
+			direction: newState.direction
+		});
+
+		newStockData = stocks.stocks;
+		console.log(stocks);
+		totalCount = stocks.count;
+
 		// TODO: Connect this to database query
 		console.log('Sort changed:', newState);
 	}
 
-	let stockData = $derived.by(() => {
-		let stockData = [...data.stocks];
-		let countries = data.countries;
-		let sectors = data.sectors;
-		console.log(sectors);
-		console.log(countries);
-
-		let mappedStockData = stockData.map((stock) => {
-			let returnObj: any = {};
-			returnObj.country = countries.find((country) => country.id === stock.countryId)?.name;
-			let sector = sectors.find((sector) => sector.id === stock.sectorId)?.name;
-
-			let split = sector?.split('-');
-			let sectorString = '';
-			split?.forEach((word, index) => {
-				sectorString += word.charAt(0).toUpperCase() + word.slice(1) + ' ';
-			});
-
-			if (stock.recessionReturn !== null && stock.recessionReturn !== -9999) {
-				returnObj.recessionReturn = stock.recessionReturn / 100;
-			} else {
-				returnObj.recessionReturn = null;
-			}
-
-			returnObj.fiftyTwoWeekRange = `${stock.fiftyTwoWeekLow?.toFixed(2)} - ${stock.fiftyTwoWeekHigh?.toFixed(2)} ${stock.currency}`;
-
-			if (stock.dividendDate !== null) {
-				returnObj.dividendDate = format(new Date(stock.dividendDate), 'MMM dd, yyyy');
-			}
-
-			if (stock.forwardPE !== null && stock.forwardPE !== -9999) {
-				returnObj.peRatio = `${stock.forwardPE.toFixed(2)}-${stock.trailingPE?.toFixed(2) ?? '-'}`;
-			} else {
-				returnObj.peRatio = null;
-			}
-
-			if (stock.marketCap) {
-				returnObj.marketCap = new Intl.NumberFormat('en-US', {
-					style: 'currency',
-					currency: 'USD',
-					maximumFractionDigits: 0,
-					notation: 'compact',
-					compactDisplay: 'short'
-				}).format(stock.marketCap);
-			} else {
-				returnObj.marketCap = null;
-			}
-
-			if (
-				stock.recessionDividendPerformance === 'no_dividend' ||
-				stock.recessionDividendPerformance === null
-			) {
-				returnObj.recessionDividendPerformance = null;
-			}
-			if (stock.recessionDividendPerformance === 'increased') {
-				returnObj.recessionDividendPerformance = 'Increased';
-			}
-			if (stock.recessionDividendPerformance === 'cut') {
-				returnObj.recessionDividendPerformance = 'Cut';
-			}
-			if (stock.recessionDividendPerformance === 'maintained') {
-				returnObj.recessionDividendPerformance = 'Maintained';
-			}
-
-			if (stock.dividendYield) {
-				returnObj.dividendYield = stock.dividendYield / 100;
-			}
-
-			returnObj.netDebtToCapital = stock.netDebtToCapital?.toFixed(2);
-
-			returnObj.payoutRatio = stock.payoutRatio?.toFixed(2);
-			if (stock.freeCashflow) {
-				returnObj.freeCashflow = new Intl.NumberFormat('en-US', {
-					style: 'currency',
-					currency: 'USD',
-					maximumFractionDigits: 0,
-					notation: 'compact',
-					compactDisplay: 'short'
-				}).format(stock.freeCashflow);
-			} else {
-				returnObj.freeCashflow = null;
-			}
-
-			return {
-				...stock,
-				...returnObj
-			};
-		});
-
-		return mappedStockData;
+	let tableData = $derived.by(() => {
+		return newStockData.length > 0 ? newStockData : data.stocks;
 	});
 
 	// Initial filters state
@@ -542,8 +523,8 @@
 			<pre class="text-xs">{JSON.stringify(activeFilters, null, 2)}</pre>
 		</div> -->
 		<Datatable
-			totalCount={stockData.length}
-			data={stockData}
+			{totalCount}
+			data={tableData}
 			{columns}
 			{sortState}
 			onSortChange={handleSortChange}

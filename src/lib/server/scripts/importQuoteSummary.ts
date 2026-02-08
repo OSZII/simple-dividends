@@ -17,16 +17,14 @@ async function importQuoteSummary() {
     };
 
     try {
-        let countries = await db.select().from(countriesTable);
-        let sectors = await db.select().from(sectorsTable);
-
-        console.log(countries);
-        console.log(sectors);
         const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
         const stocksToImport = await db
             .select({ symbol: stocks.symbol }).from(stocks)
             .where(
-                isNull(stocks.beta),
+                or(
+                    isNull(stocks.beta),
+                    isNull(stocks.sector),
+                )
             )
 
         log(`Found ${stocksToImport.length} stocks to import`);
@@ -44,7 +42,7 @@ async function importQuoteSummary() {
                 let quoteSummary;
                 try {
                     quoteSummary = await yahooFinance.quoteSummary(stockData.symbol, {
-                        modules: ['assetProfile', 'summaryDetail', "financialData"]
+                        modules: ['assetProfile', 'summaryDetail', 'financialData', 'defaultKeyStatistics', 'calendarEvents']
                     });
                 } catch (apiError) {
                     logError(`Failed to fetch quote summary for ${stockData.symbol}`, apiError);
@@ -52,48 +50,7 @@ async function importQuoteSummary() {
                     continue;
                 }
 
-                let country = quoteSummary.assetProfile?.country ?? null;
                 let sector = quoteSummary.assetProfile?.sectorKey ?? null;
-
-                // id 1 are the default entries for not available
-                let countryId: number | null = null;
-                // if country is defined use id or add to database
-                if (country) {
-                    countryId = countries.find(c => c.name === country)?.id ?? null;
-                    if (!countryId) {
-                        try {
-                            let insertedCountry = await db.insert(countriesTable).values({ name: country }).returning();
-                            countryId = insertedCountry[0].id;
-                            countries.push({ id: insertedCountry[0].id, name: insertedCountry[0].name });
-                        } catch (dbError) {
-                            logError(`Failed to insert country "${country}" for ${stockData.symbol}`, dbError);
-                            countryId = 1; // fallback to default
-                        }
-                    }
-                } else {
-                    // if no country defined value 1
-                    countryId = 1;
-                }
-
-                // id 1 are the default entries for not available
-                let sectorId: number | null = null;
-                // if sector is defined use id or add to database
-                if (sector) {
-                    sectorId = sectors.find(s => s.name === sector)?.id ?? null;
-                    if (!sectorId) {
-                        try {
-                            let insertedSector = await db.insert(sectorsTable).values({ name: sector }).returning();
-                            sectorId = insertedSector[0].id;
-                            sectors.push({ id: insertedSector[0].id, name: insertedSector[0].name });
-                        } catch (dbError) {
-                            logError(`Failed to insert sector "${sector}" for ${stockData.symbol}`, dbError);
-                            sectorId = 1; // fallback to default
-                        }
-                    }
-                } else {
-                    // if no sector defined value 1
-                    sectorId = 1;
-                }
 
                 let beta = quoteSummary.summaryDetail?.beta;
                 let freeCashflow = quoteSummary.financialData?.freeCashflow;
@@ -117,11 +74,56 @@ async function importQuoteSummary() {
                 }
                 let payoutRatio = quoteSummary.summaryDetail?.payoutRatio;
 
+                // NEW: From summaryDetail
+                let dividendYield5YearAverage = quoteSummary.summaryDetail?.fiveYearAvgDividendYield ?? null;
+                let priceToSalesTrailing12Months = quoteSummary.summaryDetail?.priceToSalesTrailing12Months ?? null;
+
+                // NEW: From financialData
+                let profitMargins = quoteSummary.financialData?.profitMargins ?? null;
+                let grossMargins = quoteSummary.financialData?.grossMargins ?? null;
+                let operatingMargins = quoteSummary.financialData?.operatingMargins ?? null;
+                let earningsGrowth = quoteSummary.financialData?.earningsGrowth ?? null;
+                let totalRevenue = quoteSummary.financialData?.totalRevenue ?? null;
+
+                // NEW: From defaultKeyStatistics
+                let earningsQuarterlyGrowth = quoteSummary.defaultKeyStatistics?.earningsQuarterlyGrowth ?? null;
+                let netIncomeToCommon = quoteSummary.defaultKeyStatistics?.netIncomeToCommon ?? null;
+
+                // NEW: From calendarEvents
+                let exDividendDateRaw = quoteSummary.calendarEvents?.exDividendDate ?? null;
+                let exDividendDate = exDividendDateRaw ? new Date(exDividendDateRaw).getTime() : null;
+
+                // NEW: Calculate ROIC
+                let returnOnInvestedCapital: number | null = null;
+                if (totalRevenue && operatingMargins && totalDebt && debtToEquity && netIncomeToCommon) {
+                    // Calculate operating income
+                    const operatingIncome = totalRevenue * operatingMargins;
+
+                    // Calculate effective tax rate (guard against division by zero)
+                    let effectiveTaxRate = 0.21; // Default to 21% US corporate rate
+                    if (operatingIncome > 0) {
+                        effectiveTaxRate = 1 - (netIncomeToCommon / operatingIncome);
+                        // Clamp to reasonable range (0-50%)
+                        effectiveTaxRate = Math.max(0, Math.min(0.5, effectiveTaxRate));
+                    }
+
+                    // Calculate NOPAT
+                    const nopat = operatingIncome * (1 - effectiveTaxRate);
+
+                    // Calculate invested capital
+                    const totalEquityCalc = totalDebt / (debtToEquity / 100);
+                    const investedCapital = totalEquityCalc + totalDebt - (totalCash ?? 0);
+
+                    // Calculate ROIC (guard against division by zero)
+                    if (investedCapital > 0) {
+                        returnOnInvestedCapital = nopat / investedCapital;
+                    }
+                }
+
                 try {
                     await db.update(stocks)
                         .set({
-                            countryId,
-                            sectorId,
+                            sector,
                             beta,
                             freeCashflow,
                             ebitda,
@@ -133,6 +135,16 @@ async function importQuoteSummary() {
                             debtToEquity,
                             netDebtToCapital,
                             payoutRatio,
+                            // NEW FIELDS:
+                            dividendYield5YearAverage,
+                            priceToSalesTrailing12Months,
+                            profitMargins,
+                            grossMargins,
+                            operatingMargins,
+                            earningsGrowth,
+                            earningsQuarterlyGrowth,
+                            returnOnInvestedCapital,
+                            exDividendDate,
                         })
                         .where(eq(stocks.symbol, stockData.symbol));
                     successCount++;
