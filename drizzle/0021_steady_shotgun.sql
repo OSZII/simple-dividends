@@ -1,0 +1,1 @@
+CREATE INDEX "stocks_name_idx" ON "stocks" USING btree ("name");

@@ -154,6 +154,7 @@ export const stocks = pgTable('stocks', {
     // === METADATA ===
     lastUpdated: timestamp('last_updated').defaultNow()
 }, (table) => ([
+    index('stocks_name_idx').on(table.name),
     index('stocks_price_idx').on(table.price),
     index('stocks_sector_id_idx').on(table.sector),
     index('stocks_market_cap_idx').on(table.marketCap),

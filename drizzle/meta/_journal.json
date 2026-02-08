@@ -148,6 +148,13 @@
       "when": 1770575424779,
       "tag": "0020_slimy_crystal",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1770578995486,
+      "tag": "0021_steady_shotgun",
+      "breakpoints": true
     }
   ]
 }
