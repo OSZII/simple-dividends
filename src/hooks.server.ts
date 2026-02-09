@@ -7,8 +7,10 @@ import { calculateRecessionReturns } from '$lib/server/scripts/calculateRecessio
 import { importQuoteSummary } from '$lib/server/scripts/importQuoteSummary';
 import type { ServerInit } from '@sveltejs/kit';
 import { calculateDividendMetrics } from '$lib/server/scripts/calculateDividendMetrics';
-import { stocks } from '$lib/server/db/schema';
-import { getTableColumns } from 'drizzle-orm';
+import { stockHistory, stocks } from '$lib/server/db/schema';
+import { and, asc, eq, getTableColumns, gte, inArray, isNotNull, sql } from 'drizzle-orm';
+import { globalCache } from '$lib/server/cache';
+import { db } from '$lib/server/db';
 
 cron.schedule('0 * * * 1-5', () => {
     if (dev) {
@@ -48,8 +50,39 @@ cron.schedule('0 0 * * 0', () => {
     calculateDividendMetrics();
 });
 
-
 export const handle: Handle = async ({ event, resolve }) => {
+
+    let fiveYearsAgo = `${(new Date().getFullYear()) - 5}-01-01`;
+    let stockSymbols = ["AAPL", "MSFT"];
+    let start = performance.now();
+    let stockHistoryData = db
+        .selectDistinctOn([sql`date_trunc('month', ${stockHistory.date}::date)`], {
+            id: stockHistory.id,
+            symbol: stockHistory.symbol,
+            date: stockHistory.date,
+            price: stockHistory.price,
+        })
+        .from(stockHistory)
+        .where(
+            and(
+                inArray(stockHistory.symbol, stockSymbols),
+                gte(stockHistory.date, fiveYearsAgo)
+            )
+        )
+        .orderBy(
+            sql`date_trunc('month', ${stockHistory.date}::date)`,
+            asc(stockHistory.date) // Use 'asc' for first day of month, 'desc' for last day
+        );
+
+    let { sql: stockHistorySQL, params: stockHistoryParams } = stockHistoryData.toSQL();
+    // console.log("sql", stockHistorySQL);
+    // console.log(stockHistoryParams);
+    // console.log(stockHistoryData.());
+
+
+    console.log("stockhistory hooks", await stockHistoryData);
+    console.log(performance.now() - start);
+
     // get query param here
     const scriptParam = event.url.searchParams.get('script');
     if (scriptParam === 'import-stocks') {

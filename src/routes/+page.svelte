@@ -13,6 +13,8 @@
 
 	let totalCount = $state(data.count);
 
+	console.log(data.stocks);
+
 	// Column configuration for the datatable
 	let columns = $state<ColumnConfig[]>([
 		{ key: 'name', label: 'Name', sortable: true, enabled: true, align: 'left' }, // SYMBOL and Name in one
@@ -20,16 +22,26 @@
 			key: 'price',
 			label: 'Price',
 			sortable: true,
-			enabled: true,
+			enabled: false,
 			align: 'center',
 			renderType: 'currency'
 		},
-		{ key: 'sector', label: 'Sector', sortable: true, enabled: true, align: 'left' },
+		{
+			key: 'sector',
+			label: 'Sector',
+			sortable: true,
+			enabled: false,
+			align: 'left',
+			modify: (value: string) => {
+				let words = value.split('-');
+				return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+			}
+		},
 		{
 			key: 'marketCap',
 			label: 'Market Cap',
 			sortable: true,
-			enabled: true,
+			enabled: false,
 			align: 'center',
 			modify: (value: number) => {
 				return new Intl.NumberFormat('en-US', {
@@ -44,8 +56,8 @@
 		{
 			key: 'beta',
 			label: 'Beta',
-			sortable: false,
-			enabled: true,
+			sortable: true,
+			enabled: false,
 			align: 'center',
 			modify: (value: number) => {
 				return value.toFixed(2);
@@ -72,31 +84,32 @@
 		{
 			key: 'peRatio',
 			label: 'P/E Ratio',
-			sortable: false,
+			sortable: true,
 			enabled: true,
 			align: 'center',
 			modify: (value: number) => {
 				return value.toFixed(2);
 			}
 		},
+		// TODO: customize sort when ASC then highest ASC and DESC then lowest ASC
 		{
 			key: 'fiftyTwoWeekRange',
 			label: '52-Week Range',
-			sortable: false,
-			enabled: true,
+			sortable: true,
+			enabled: false,
 			align: 'center'
 		},
 		{
 			key: 'dividendSafety', // here add the slider min and max price and add a dot where the current price is
 			label: 'Dividend Safety',
-			sortable: false,
+			sortable: true,
 			enabled: true,
 			align: 'center'
 		},
 		{
 			key: 'dividendGrowth1Year',
 			label: 'Dividend Growth',
-			sortable: false,
+			sortable: true,
 			enabled: true,
 			align: 'center',
 			modify: (value: number) => {
@@ -106,7 +119,7 @@
 		{
 			key: 'dividendGrowth5Year',
 			label: '5-Year Dividend Growth',
-			sortable: false,
+			sortable: true,
 			enabled: true,
 			align: 'center',
 			modify: (value: number) => {
@@ -116,7 +129,7 @@
 		{
 			key: 'dividendGrowth10Year',
 			label: '10-Year Dividend Growth',
-			sortable: false,
+			sortable: true,
 			enabled: true,
 			align: 'center',
 			modify: (value: number) => {
@@ -126,21 +139,21 @@
 		{
 			key: 'dividendGrowthStreak',
 			label: 'Dividend Growth Streak',
-			sortable: false,
+			sortable: true,
 			enabled: true,
 			align: 'center'
 		},
 		{
 			key: 'uninterruptedDividendStreak',
 			label: 'Uninterrupted Dividend Streak',
-			sortable: false,
+			sortable: true,
 			enabled: true,
 			align: 'center'
 		},
 		{
 			key: 'dividendDate',
 			label: 'Ex-Dividend Date',
-			sortable: false,
+			sortable: true,
 			enabled: true,
 			align: 'center',
 			modify: (value: number) => {
@@ -151,20 +164,20 @@
 				}).format(new Date(value));
 			}
 		},
-		{
-			key: 'paymentFrequency',
-			label: 'Payment Frequency',
-			sortable: false,
-			enabled: true,
-			align: 'center'
-		},
-		{
-			key: 'paymentScheduleMonths',
-			label: 'Payment Schedule',
-			sortable: false,
-			enabled: true,
-			align: 'center'
-		},
+		// {
+		// 	key: 'paymentFrequency',
+		// 	label: 'Payment Frequency',
+		// 	sortable: false,
+		// 	enabled: true,
+		// 	align: 'center'
+		// },
+		// {
+		// 	key: 'paymentScheduleMonths',
+		// 	label: 'Payment Schedule',
+		// 	sortable: false,
+		// 	enabled: true,
+		// 	align: 'center'
+		// },
 		// {
 		// 	key: 'creditRating',
 		// 	label: 'Credit Rating',
@@ -175,14 +188,17 @@
 		{
 			key: 'payoutRatio',
 			label: 'Payout Ratio',
-			sortable: false,
+			sortable: true,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			modify: (value: number) => {
+				return (value * 100).toFixed(1) + '%';
+			}
 		},
 		{
 			key: 'netDebtToCapital',
 			label: 'Net Debt to Capital',
-			sortable: false,
+			sortable: true,
 			enabled: true,
 			align: 'center',
 			modify: (value: number) => {
@@ -192,7 +208,7 @@
 		{
 			key: 'netDebtToEbitda',
 			label: 'Net Debt to EBITDA',
-			sortable: false,
+			sortable: true,
 			enabled: true,
 			align: 'center',
 			modify: (value: number) => {
@@ -202,7 +218,7 @@
 		{
 			key: 'freeCashflow',
 			label: 'Free Cashflow',
-			sortable: false,
+			sortable: true,
 			enabled: true,
 			align: 'center',
 			modify: (value: number) => {
@@ -218,22 +234,27 @@
 		{
 			key: 'returnOnInvestedCapital',
 			label: 'Return on Invested Capital',
-			sortable: false,
+			sortable: true,
 			enabled: true,
-			align: 'center'
+			align: 'center',
+			modify: (value: number) => {
+				return (value * 100).toFixed(1) + '%';
+			}
 		},
+		// TODO check again if it is correct
 		{
 			key: 'recessionDividendPerformance',
 			label: 'Recession Dividend Performance',
-			sortable: false,
-			enabled: true,
+			sortable: true,
+			enabled: false,
 			align: 'center'
 		},
+		// TODO check again if it is correct
 		{
 			key: 'totalRecessionReturn',
 			label: 'Recession Return',
-			sortable: false,
-			enabled: true,
+			sortable: true,
+			enabled: false,
 			align: 'center',
 			modify: (value: number) => {
 				if (value === -9999) {
@@ -315,12 +336,14 @@
 			active: false,
 			selected: [],
 			options: [
-				// Dynamically load that here
-				// { value: 'tech', label: 'Technology' },
-				// { value: 'tech', label: 'Technology' },
-				// { value: 'finance', label: 'Financials' },
-				// { value: 'health', label: 'Healthcare' },
-				// { value: 'energy', label: 'Energy' }
+				// Dynamically creates the data for the filter
+				...data.sectors.map((sector: string) => {
+					let words = sector.split('-');
+					let sectorDisplayName = words
+						.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+						.join(' ');
+					return { value: sector, label: sectorDisplayName };
+				})
 			]
 		},
 		{

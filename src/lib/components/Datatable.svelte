@@ -162,7 +162,7 @@
 			<!-- Body -->
 			<tbody>
 				{#each data as row, rowIndex (rowIndex)}
-					<tr class="border-b border-base-200 hover:bg-base-200">
+					<tr class="border-b border-base-200 hover:bg-base-200 max-h-[65px] overflow-hidden">
 						{#each enabledColumns as column (column.key)}
 							<td
 								class="{column.key === 'name'
