@@ -20,7 +20,16 @@
 </script>
 
 <script lang="ts">
-	import { CaretUp, CaretDown, Columns, Export } from 'phosphor-svelte';
+	import {
+		CaretUp,
+		CaretDown,
+		Columns,
+		Export,
+		CaretLeft,
+		CaretRight,
+		CaretDoubleLeft,
+		CaretDoubleRight
+	} from 'phosphor-svelte';
 	import ColumnModal from './ColumnModal.svelte';
 	import RangeDisplay from './DataTableDisplays/RangeDisplay.svelte';
 
@@ -28,16 +37,22 @@
 		columns: ColumnConfig[];
 		data: Record<string, unknown>[];
 		totalCount: number;
+		currentPage?: number;
+		pageSize?: number;
 		sortState?: SortState;
 		onSortChange?: (sortState: SortState) => void;
+		onPageChange?: (page: number) => void;
 	}
 
 	let {
 		columns = $bindable(),
 		data,
 		totalCount,
+		currentPage = 1,
+		pageSize = 10,
 		sortState = { column: null, direction: null },
-		onSortChange
+		onSortChange,
+		onPageChange
 	}: Props = $props();
 
 	let showColumnModal = $state(false);
@@ -94,6 +109,39 @@
 			default:
 				return String(value);
 		}
+	}
+	function handlePageChange(newPage: number) {
+		if (newPage < 1 || newPage > totalPages) return;
+		onPageChange?.(newPage);
+	}
+
+	const totalPages = $derived(Math.ceil(totalCount / pageSize));
+
+	function getPaginationRange(current: number, totalPages: number): (number | string)[] {
+		// always show 5 pages
+		let showRange = 5;
+		const range: (number | string)[] = [];
+
+		if (totalPages <= showRange) {
+			for (let i = 1; i <= totalPages; i++) {
+				range.push(i);
+			}
+			return range;
+		}
+
+		for (let i = 1; i <= showRange; i++) {
+			if (current < showRange - 1) {
+				range.push(i);
+			} else if (current + 2 >= totalPages) {
+				let offset = showRange;
+				range.push(totalPages - offset + i);
+			} else {
+				let offset = current - 3;
+				range.push(offset + i);
+			}
+		}
+
+		return range;
 	}
 </script>
 
@@ -178,7 +226,7 @@
 									/>
 								{:else if column.key === 'name'}
 									<p class="text-sm">{row.symbol}</p>
-									<a href="/company/{row.ticker}" class="max-w-[150px] truncate"
+									<a href="/company/{row.ticker}" class="max-w-[210px] truncate inline-block"
 										>{row[column.key]}</a
 									>
 								{:else if column.modify && row[column.key]}
@@ -193,6 +241,61 @@
 			</tbody>
 		</table>
 	</div>
+
+	<!-- Pagination -->
+	{#if totalPages > 1}
+		<div class="mt-4 flex items-center justify-center gap-2">
+			<!-- First Page -->
+			<button
+				class="btn btn-square btn-sm btn-ghost"
+				disabled={currentPage === 1}
+				onclick={() => handlePageChange(1)}
+			>
+				<CaretDoubleLeft size={16} />
+			</button>
+
+			<!-- Previous Page -->
+			<button
+				class="btn btn-square btn-sm btn-ghost"
+				disabled={currentPage === 1}
+				onclick={() => handlePageChange(currentPage - 1)}
+			>
+				<CaretLeft size={16} />
+			</button>
+
+			<!-- Page Numbers -->
+			<div class="join">
+				{#each getPaginationRange(currentPage, totalPages) as page}
+					<button
+						class="join-item btn btn-sm w-10 {currentPage === page
+							? 'btn-active btn-primary'
+							: 'btn-ghost'}"
+						onclick={() => handlePageChange(page as number)}
+					>
+						{page}
+					</button>
+				{/each}
+			</div>
+
+			<!-- Next Page -->
+			<button
+				class="btn btn-square btn-sm btn-ghost"
+				disabled={currentPage === totalPages}
+				onclick={() => handlePageChange(currentPage + 1)}
+			>
+				<CaretRight size={16} />
+			</button>
+
+			<!-- Last Page -->
+			<button
+				class="btn btn-square btn-sm btn-ghost"
+				disabled={currentPage === totalPages}
+				onclick={() => handlePageChange(totalPages)}
+			>
+				<CaretDoubleRight size={16} />
+			</button>
+		</div>
+	{/if}
 </div>
 
 <!-- Column Modal -->

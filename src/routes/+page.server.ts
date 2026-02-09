@@ -2,13 +2,14 @@
 import { getSectors, getStocks } from '$lib/stocks.remote';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params }) => {
-    let data = await getStocks({ column: 'name', direction: 'asc' });
+export const load: PageServerLoad = async ({ params, locals }) => {
+    let data = await getStocks({ column: 'name', direction: 'asc', limit: locals.limit });
     let sectors = await getSectors();
 
     return {
         stocks: data.stocks,
         count: data.count,
-        sectors
+        sectors,
+        pageSize: locals.limit
     };
 };

@@ -1,6 +1,6 @@
 import { db } from "$lib/server/db";
 import { dividends as dividendsTable, stockHistory, stocks as stocksTable } from "$lib/server/db/schema";
-import { query } from '$app/server';
+import { getRequestEvent, query } from '$app/server';
 import * as v from 'valibot';
 import { and, asc, count, desc, eq, gte, inArray, isNotNull, sql } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
@@ -46,23 +46,28 @@ export const getStocks = query(
         // Validate that 'column' is actually a valid key from the frontend
         column: v.nullable(v.picklist(Object.keys(stocksTable))),
         direction: v.nullable(v.picklist(["asc", "desc"])),
-        limit: v.optional(v.number())
+        limit: v.optional(v.number()),
+        offset: v.optional(v.number())
     }),
-    async ({ column, direction, limit }) => {
+    async ({ column, direction, limit, offset }) => {
+        const { locals } = getRequestEvent();
         let start = performance.now();
 
         if (!limit) {
-            limit = 10;
+            limit = locals.limit;
+        }
+        if (!offset) {
+            offset = 0;
         }
 
-        let cacheKey = `stocks:${column}-${direction}-${limit}`;
+        let cacheKey = `stocks:${column}-${direction}-${limit}-${offset}`;
 
 
-        // if (globalCache.has(cacheKey)) {
-        //     let value = globalCache.get(cacheKey);
-        //     console.log(`cache hit ${cacheKey}`, performance.now() - start);
-        //     return value;
-        // }
+        if (globalCache.has(cacheKey)) {
+            let value = globalCache.get(cacheKey);
+            console.log(`cache hit ${cacheKey}`, performance.now() - start);
+            return value;
+        }
 
         // init data
         const effectiveColumn = column ?? 'name';
@@ -77,7 +82,8 @@ export const getStocks = query(
             .select()
             .from(stocksTable)
             .where(isNotNull(stocksTable.dividendYield))
-            .limit(limit);
+            .limit(limit)
+            .offset(offset);
 
         // if sortColumn add to query
         if (sortColumn) {

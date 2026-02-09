@@ -51,6 +51,8 @@ cron.schedule('0 0 * * 0', () => {
 });
 
 export const handle: Handle = async ({ event, resolve }) => {
+    event.locals.limit = 10;
+
 
     let fiveYearsAgo = `${(new Date().getFullYear()) - 5}-01-01`;
     let stockSymbols = ["AAPL", "MSFT"];

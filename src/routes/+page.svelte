@@ -271,21 +271,38 @@
 	let initialStockData = $state(data.stocks);
 	let newStockData = $state<any[]>([]);
 
-	async function handleSortChange(newState: SortState) {
-		sortState = newState;
-		console.log('sort change');
+	// Pagination state
+	let currentPage = $state(1);
+	let pageSize = $state(data.pageSize); // Default page size
+
+	async function handlePageChange(newPage: number) {
+		currentPage = newPage;
+		const offset = (newPage - 1) * pageSize;
 
 		let stocks = await getStocks({
-			column: newState.column as SortableColumnKey | null,
-			direction: newState.direction
+			column: sortState.column as SortableColumnKey | null,
+			direction: sortState.direction,
+			limit: pageSize,
+			offset: offset
 		});
 
 		newStockData = stocks.stocks;
-		console.log(stocks);
 		totalCount = stocks.count;
+	}
 
-		// TODO: Connect this to database query
-		console.log('Sort changed:', newState);
+	async function handleSortChange(newState: SortState) {
+		sortState = newState;
+		currentPage = 1; // Reset to first page on sort
+
+		let stocks = await getStocks({
+			column: newState.column as SortableColumnKey | null,
+			direction: newState.direction,
+			limit: pageSize,
+			offset: 0
+		});
+
+		newStockData = stocks.stocks;
+		totalCount = stocks.count;
 	}
 
 	let tableData = $derived.by(() => {
@@ -551,6 +568,9 @@
 			{columns}
 			{sortState}
 			onSortChange={handleSortChange}
+			{currentPage}
+			{pageSize}
+			onPageChange={handlePageChange}
 		/>
 	</div>
 </PageLayout>
