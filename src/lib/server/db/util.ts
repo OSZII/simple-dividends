@@ -20,11 +20,11 @@ export function mapToStockInsert(stockInfo: any): typeof stocks.$inferInsert {
 
     // Dividend Data
     addIfValid('dividendYield', stockInfo.dividendYield);
-    if (stockInfo.exDividendDate) {
-        addIfValid('exDividendDate', new Date(stockInfo.exDividendDate).getTime());
-    }
+    // if (stockInfo.exDividendDate) {
+    //     addIfValid('exDividendDate', new Date(stockInfo.exDividendDate).getTime());
+    // }
     if (stockInfo.dividendDate) {
-        addIfValid('dividendDate', new Date(stockInfo.dividendDate).getTime());
+        addIfValid('dividendDate', new Date(stockInfo.dividendDate).toISOString().split('T')[0]);
     }
     addIfValid('payoutRatio', stockInfo.payoutRatio);
 

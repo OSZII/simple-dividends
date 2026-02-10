@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { stocks, stockHistory, dividends as dividendsTable, countries as countriesTable, sectors as sectorsTable } from '../db/schema';
+import { stocks, stockHistory, dividends as dividendsTable, countries as countriesTable, sectors as sectorsTable, dividendCalendar } from '../db/schema';
 import { eq, and, gte, lte, isNotNull, isNull, count, asc, or, desc } from 'drizzle-orm';
 import YahooFinance from 'yahoo-finance2';
 import { delay } from './util';
@@ -91,7 +91,18 @@ async function importQuoteSummary() {
 
                 // NEW: From calendarEvents
                 let exDividendDateRaw = quoteSummary.calendarEvents?.exDividendDate ?? null;
-                let exDividendDate = exDividendDateRaw ? new Date(exDividendDateRaw).getTime() : null;
+                let exDividendDate: null | Date | string = exDividendDateRaw ? new Date(exDividendDateRaw) : null;
+                if (exDividendDate !== null) {
+                    const dateString = exDividendDate.toISOString().split('T')[0];
+
+                    exDividendDate = dateString;
+
+                    log(`Inserting ex-dividend date for ${stockData.symbol}: ${dateString}`);
+                    await db.insert(dividendCalendar).values({
+                        symbol: stockData.symbol,
+                        date: dateString,
+                    }).onConflictDoNothing();
+                }
 
                 // NEW: Calculate ROIC
                 let returnOnInvestedCapital: number | null = null;

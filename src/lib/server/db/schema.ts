@@ -69,10 +69,10 @@ export const stocks = pgTable('stocks', {
     dividendYield: real('dividend_yield'),
     // simply safe dividends has a graph with a line at the 5 year average and shows a dot at the current one
     dividendYield5YearAverage: real('dividend_yield_5_year_average'),
-    exDividendDate: bigint('ex_dividend_date', { mode: 'number' }), // epoch timestamp contains either the date or an estimated one
+    exDividendDate: date('ex_dividend_date', { mode: 'string' }), // epoch timestamp contains either the date or an estimated one
     exDividendDateEstimatedOrConfirmed: boolean('ex_dividend_date_estimated_or_confirmed'), // true if estimated, we will do it based of historical data if available
 
-    dividendDate: bigint('dividend_date', { mode: 'number' }), // payment date epoch
+    dividendDate: date('dividend_date', { mode: 'string' }), // payment date epoch
     payoutRatio: real('payout_ratio'),
 
     // Dividend Growth & Streaks
@@ -81,7 +81,6 @@ export const stocks = pgTable('stocks', {
     dividendGrowth10Year: real('dividend_growth_10_year'),
     dividendGrowthStreak: integer('dividend_growth_streak'), // years of consecutive growth
     uninterruptedDividendStreak: integer('uninterrupted_dividend_streak'), // years without cut
-    latestDividendRaiseDate: bigint('latest_dividend_raise_date', { mode: 'number' }), // when it was raised to show in dividend growth field
 
     // Payment Info
     paymentFrequency: paymentFrequencyEnum('payment_frequency'), // monthly, quarterly, semi_annual, annual
@@ -219,4 +218,12 @@ export const stockHistory = pgTable('stock_history', {
     volume: bigint('volume', { mode: 'number' }).notNull(),
 }, (table) => ([
     index('stock_history_symbol_date_idx').on(table.symbol, table.date),
+]));
+
+export const dividendCalendar = pgTable('dividend_calendar', {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    symbol: text('symbol').references(() => stocks.symbol, { onDelete: 'cascade' }).notNull(),
+    date: date('date', { mode: 'string' }).notNull(),
+}, (table) => ([
+    index('dividend_calendar_symbol_date_idx').on(table.symbol, table.date),
 ]));
