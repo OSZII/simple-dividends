@@ -22,8 +22,6 @@ async function calculateRecessionReturns(silent: boolean = false) {
         .select({ count: count() })
         .from(stocks)
         .where(and(
-            isNotNull(stocks.name),
-            isNotNull(stocks.volume),
             isNull(stocks.totalRecessionReturn)
         ));
 
@@ -47,8 +45,6 @@ async function calculateRecessionReturns(silent: boolean = false) {
             })
             .from(stocks)
             .where(and(
-                isNotNull(stocks.name),
-                isNotNull(stocks.volume),
                 isNull(stocks.totalRecessionReturn)
             ))
             .limit(BATCH_SIZE);
@@ -88,6 +84,7 @@ async function calculateRecessionReturns(silent: boolean = false) {
                         .update(stocks)
                         .set({
                             totalRecessionReturn: -9999,
+                            recessionDividendPerformance: 'no_data',
                         })
                         .where(eq(stocks.id, stock.id));
                     skippedCount++;
@@ -116,28 +113,19 @@ async function calculateRecessionReturns(silent: boolean = false) {
                     .orderBy(asc(dividendsTable.date));
 
 
+
                 const analysis = analyzeRecession(dividendHistory, startPrice, endPrice);
-
-                // Determine dividend performance category
-                let dividendPerformance: string;
-                if (dividendHistory.length > 0) {
-                    dividendPerformance = analysis.dividendStatus;
-                } else {
-                    dividendPerformance = 'no_dividend';
-                }
-
-                let recessionReturn = analysis.totalReturn;
-
                 // Update stock with recession performance data
                 await db
                     .update(stocks)
                     .set({
-                        totalRecessionReturn: recessionReturn, // Round to 2 decimal places
-                        recessionDividendPerformance: dividendPerformance,
+                        totalRecessionReturn: analysis.totalReturn, // Round to 2 decimal places
+                        recessionDividendPerformance: analysis.dividendStatus,
                     })
                     .where(eq(stocks.id, stock.id));
 
-                log(`✓ ${stock.symbol}: start price=${startPrice}, end price=${endPrice}, return=${recessionReturn}%, dividends=${dividendPerformance}`);
+                updatedCount++;
+                log(`✓ ${stock.symbol}: start=${startPrice}, end=${endPrice}, return=${analysis.totalReturn.toFixed(2)}%, dividends=${analysis.dividendStatus}`);
             } catch (error) {
                 log(`❌ Error processing ${stock.symbol}: ${error}`);
             }
@@ -160,68 +148,56 @@ async function calculateRecessionReturns(silent: boolean = false) {
     };
 }
 
-function analyzeRecession(history: any[], startPrice: number, endPrice: number) {
-    // Group by year
-    const yearly = history.reduce((acc, div) => {
-        const year = div.date.split('-')[0];
-        acc[year] = (acc[year] || 0) + parseFloat(div.amount);
-        return acc;
-    }, {} as Record<string, number>);
+function analyzeRecession(dividendHistory: any[], startPrice: number, endPrice: number) {
+    // 1. Calculate Total Return
+    // Since price is 'adjclose' (adjusted close), it already includes dividends.
+    // So Total Return = ((End Price - Start Price) / Start Price) * 100
+    const totalReturn = ((endPrice - startPrice) / startPrice) * 100;
 
-    // Get all dividend amounts chronologically
-    const amounts = history.map(d => parseFloat(d.amount));
+    // 2. Analyze Dividend Performance
+    let dividendStatus: string = 'no_data';
+    const yearly: Record<string, number> = {};
 
-    // Find the baseline (first non-zero regular dividend)
-    const baselineRate = amounts.find(a => a > 0) || 0;
+    if (dividendHistory.length > 0) {
+        // Sort chronologically just in case
+        const sortedHistory = [...dividendHistory].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    // Check if any dividend was lower than baseline (indicating a cut)
-    // We look at subsequent non-zero dividends to see if there was a cut
-    let wasCut = false;
-    let lowestRate = baselineRate;
+        // Group by year for other stats (optional)
+        sortedHistory.forEach(div => {
+            const year = div.date.split('-')[0];
+            yearly[year] = (yearly[year] || 0) + parseFloat(div.amount);
+        });
 
-    for (let i = 1; i < amounts.length; i++) {
-        if (amounts[i] === 0) {
-            // Zero dividend is definitely a cut
-            wasCut = true;
-            lowestRate = 0;
-            break;
+        // Check for cuts
+        let hasCut = false;
+        let amounts = sortedHistory.map(d => parseFloat(d.amount));
+
+        // Check strictly: if any dividend is lower than the previous one, it's a cut
+        for (let i = 1; i < amounts.length; i++) {
+            if (amounts[i] < amounts[i - 1]) {
+                hasCut = true;
+                break;
+            }
+        }
+
+        const initialAmount = amounts[0];
+        const finalAmount = amounts[amounts.length - 1];
+
+        if (hasCut) {
+            dividendStatus = 'cut';
+        } else if (finalAmount > initialAmount) {
+            dividendStatus = 'increased';
+        } else if (Math.abs(finalAmount - initialAmount) < 0.0001) {
+            dividendStatus = 'maintained';
+        } else {
+            // Should be covered by cut or maintained, but fallback
+            dividendStatus = 'maintained';
         }
     }
 
-    // Final dividend rate
-    const finalRate = amounts[amounts.length - 1];
-
-    // Calculate rate growth from baseline to final
-    const rateGrowth = ((finalRate - baselineRate) / baselineRate) * 100;
-
-    // Calculate annual cash growth (2007 vs 2009)
-    const cashGrowth = ((yearly['2009'] - yearly['2007']) / yearly['2007']) * 100;
-
-    // Determine dividend status
-    let dividendStatus: string;
-
-    if (wasCut) {
-        dividendStatus = "cut";
-    } else if (finalRate > baselineRate) {
-        dividendStatus = "increased";
-    } else if (Math.abs(finalRate - baselineRate) < 0.0001) {
-        dividendStatus = "maintained";
-    } else {
-        dividendStatus = "cut";
-    }
-
-    // Total Return (Price change + all dividends / start price)
-    const allDivsSum = Object.values(yearly).reduce((a: any, b: any) => a + b, 0) as unknown as number;
-    const totalReturn = (((endPrice - startPrice) + allDivsSum) / startPrice) * 100;
-
     return {
-        annualTotals: yearly,
-        dividendRateGrowth: rateGrowth.toFixed(2) + "%",
-        annualCashGrowth: cashGrowth.toFixed(2) + "%",
-        totalReturn: totalReturn,
-        dividendStatus: dividendStatus,
-        baselineDividendRate: baselineRate,
-        finalDividendRate: finalRate
+        totalReturn,
+        dividendStatus
     };
 }
 

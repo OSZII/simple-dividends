@@ -45,10 +45,12 @@
 	"dependencies": {
 		"bits-ui": "^2.15.4",
 		"date-fns": "^4.1.0",
+		"layercake": "^10.0.2",
 		"lru-cache": "^11.2.5",
 		"node-cron": "^4.2.1",
 		"phosphor-svelte": "^3.1.0",
 		"postgres": "^3.4.7",
+		"runed": "^0.37.1",
 		"valibot": "^1.2.0",
 		"yahoo-finance2": "^3.13.0"
 	},

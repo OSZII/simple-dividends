@@ -89,7 +89,6 @@ export const stocks = pgTable('stocks', {
 
     // Recession Performance 2007 - 2009
     recessionDividendPerformance: text('recession_dividend_performance'), // "maintained", "cut", "increased"
-    recessionDividendPerformancePercentage: real('recession_dividend_performance_percentage'), // "maintained", "cut", "increased"
     // 5 steps compared to S&P 500 very good, good, average, poor, very poor, required for display
     totalRecessionReturn: real('total_recession_return'), // performance during recession %
 
@@ -98,7 +97,6 @@ export const stocks = pgTable('stocks', {
     // === VALUATION ===
     peRatio: real('pe_ratio'),
     priceToBook: real('price_to_book'),
-    peRelativeToHistory: real('pe_relative_to_history'), // current PE vs historical avg (ratio)
     priceToSalesTrailing12Months: real('price_to_sales_trailing'),
     // 'undervalued', 'reasonably_valued','overvalued', 'speculative'
     // in the table this shows min and max expected and a dot on a horizontal line where it is now left is below value right above
@@ -121,7 +119,7 @@ export const stocks = pgTable('stocks', {
     forwardEps: real('forward_eps'),
     earningsQuarterlyGrowth: real('earnings_quarterly_growth'),
     earningsGrowth: real('earnings_growth'),
-    earningsTimestamp: bigint('earnings_timestamp', { mode: 'number' }),
+    earningsTimestamp: date('earnings_timestamp', { mode: 'string' }),
 
     // === FINANCIAL HEALTH ===
     profitMargins: real('profit_margins'),
@@ -144,11 +142,8 @@ export const stocks = pgTable('stocks', {
     netDebtToEbitda: real('net_debt_to_ebitda'),
     ebitda: bigint('ebitda', { mode: 'number' }),
 
-    creditRating: text('credit_rating'), // e.g., "AAA", "BBB+", etc.
-
     // === ANALYST DATA ===
     recommendation: text('recommendation'), // "buy", "hold", "sell"
-    numberOfAnalystOpinions: integer('number_of_analyst_opinions'),
 
     // === METADATA ===
     lastUpdated: timestamp('last_updated').defaultNow()
@@ -174,7 +169,6 @@ export const stocks = pgTable('stocks', {
     index('stocks_ex_dividend_date_idx').on(table.exDividendDate),
     index('stocks_payment_frequency_idx').on(table.paymentFrequency),
     index('stocks_payment_schedule_months_idx').on(table.paymentScheduleMonths),
-    index('stocks_credit_rating_idx').on(table.creditRating),
     index('stocks_payout_ratio_idx').on(table.payoutRatio),
     index('stocks_net_debt_to_capital_idx').on(table.netDebtToCapital),
     index('stocks_net_debt_to_ebitda_idx').on(table.netDebtToEbitda),

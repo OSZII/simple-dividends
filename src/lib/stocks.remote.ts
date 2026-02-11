@@ -31,7 +31,7 @@ const sortableColumns = {
     freeCashflow: stocksTable.freeCashflow,
     returnOnInvestedCapital: stocksTable.returnOnInvestedCapital,
     recessionDividendPerformance: stocksTable.recessionDividendPerformance,
-    recessionReturn: stocksTable.totalRecessionReturn
+    totalRecessionReturn: stocksTable.totalRecessionReturn
 };
 
 export type SortableColumnKey = keyof typeof sortableColumns;
@@ -116,8 +116,8 @@ export const getStocks = query(
         }
         console.log(`dividend query time ${cacheKey}`, performance.now() - dividendQueryStart);
 
-        let stockHistoryData = await db
-            .selectDistinctOn([sql`date_trunc('month', ${stockHistory.date}::date)`], {
+        let stockHistoryData = db
+            .selectDistinctOn([stockHistory.symbol, sql`date_trunc('month', ${stockHistory.date}::date)`], {
                 id: stockHistory.id,
                 symbol: stockHistory.symbol,
                 date: stockHistory.date,
@@ -131,12 +131,14 @@ export const getStocks = query(
                 )
             )
             .orderBy(
+                stockHistory.symbol,
                 sql`date_trunc('month', ${stockHistory.date}::date)`,
-                asc(stockHistory.date) // Use 'asc' for first day of month, 'desc' for last day
+                asc(stockHistory.date)
             );
 
+        let stockHistoryDataResult = await stockHistoryData;
         for (let i = 0; i < stocks.length; i++) {
-            stocks[i].priceHistory = stockHistoryData.filter((stockHistory) => stockHistory.symbol === stocks[i].symbol);
+            stocks[i].priceHistory = stockHistoryDataResult.filter((stockHistory) => stockHistory.symbol === stocks[i].symbol);
             // console.log(stocks[i].symbol, stocks[i].priceHistory);
 
         }

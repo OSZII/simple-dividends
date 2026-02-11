@@ -7,6 +7,7 @@
 		sortable: boolean;
 		enabled: boolean;
 		width?: string;
+		hidden?: boolean;
 		align?: 'left' | 'center' | 'right';
 		renderType?: 'text' | 'currency' | 'percent' | 'badge' | 'chart';
 		// this is to modify values on the table confic level
@@ -32,6 +33,8 @@
 	} from 'phosphor-svelte';
 	import ColumnModal from './ColumnModal.svelte';
 	import RangeDisplay from './DataTableDisplays/RangeDisplay.svelte';
+	import Line from './DataTableDisplays/Line.svelte';
+	import { LayerCake, Svg } from 'layercake';
 
 	interface Props {
 		columns: ColumnConfig[];
@@ -101,7 +104,7 @@
 					? new Intl.NumberFormat('en-US', {
 							style: 'currency',
 							currency: 'USD',
-							maximumFractionDigits: 0
+							maximumFractionDigits: 2
 						}).format(value)
 					: String(value);
 			case 'percent':
@@ -196,8 +199,6 @@
 											<CaretUp size={14} weight="fill" />
 										{:else if getSortIcon(column) === 'desc'}
 											<CaretDown size={14} weight="fill" />
-										{:else}
-											<CaretUp size={12} />
 										{/if}
 									</span>
 								{/if}
@@ -224,6 +225,19 @@
 										max={row.fiftyTwoWeekHigh}
 										current={row.price}
 									/>
+								{:else if column.key === 'price'}
+									{@const priceHistory =
+										(row.priceHistory as { date: string; price: string }[] | undefined)?.map(
+											(item) => ({ x: new Date(item.date), y: parseFloat(item.price) })
+										) ?? []}
+									{parseFloat(row[column.key]).toFixed(2)}$
+									<div class="h-5 w-24">
+										<LayerCake x="x" y="y" data={priceHistory}>
+											<Svg>
+												<Line />
+											</Svg>
+										</LayerCake>
+									</div>
 								{:else if column.key === 'name'}
 									<p class="text-sm">{row.symbol}</p>
 									<a href="/company/{row.ticker}" class="max-w-[210px] truncate inline-block"
@@ -299,4 +313,4 @@
 </div>
 
 <!-- Column Modal -->
-<ColumnModal bind:open={showColumnModal} {columns} />
+<ColumnModal bind:open={showColumnModal} bind:columns />

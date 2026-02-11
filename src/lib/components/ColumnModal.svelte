@@ -41,6 +41,10 @@
 	function closeModal() {
 		open = false;
 	}
+
+	// $effect(() => {
+	// 	console.log('columns', columns);
+	// });
 </script>
 
 {#if open}
@@ -69,38 +73,42 @@
 			<div class="flex-1 overflow-y-auto px-2 py-2">
 				{#each columns as column, index (column.key)}
 					<!-- svelte-ignore a11y_no_interactive_element_to_noninteractive_role -->
-					<button
-						class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-base-200 cursor-pointer"
-						draggable="true"
-						ondragstart={(e) => handleDragStart(e, index)}
-						ondragover={(e) => handleDragOver(e, index)}
-						ondragend={handleDragEnd}
-						class:opacity-50={draggedIndex === index}
-						onclick={() => toggleColumn(index)}
-						onkeydown={(e) => e.key === 'Enter' && toggleColumn(index)}
-						role="listitem"
-						tabindex="0"
-					>
-						<!-- Checkbox -->
-						<div
-							class="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors"
-							class:border-primary={column.enabled}
-							class:bg-primary={column.enabled}
-							class:border-base-300={!column.enabled}
+					{#if !column.hidden}
+						<button
+							class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg hover:bg-base-200 cursor-pointer"
+							draggable="true"
+							ondragstart={(e) => handleDragStart(e, index)}
+							ondragover={(e) => handleDragOver(e, index)}
+							ondragend={handleDragEnd}
+							class:opacity-50={draggedIndex === index}
+							onclick={() => toggleColumn(index)}
+							onkeydown={(e) => e.key === 'Enter' && toggleColumn(index)}
+							role="listitem"
+							tabindex="0"
 						>
-							{#if column.enabled}
-								<Check size={14} weight="bold" class="text-primary-content" />
-							{/if}
-						</div>
+							<div class="flex items-center gap-5">
+								<!-- Checkbox -->
+								<div
+									class="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors"
+									class:border-primary={column.enabled}
+									class:bg-primary={column.enabled}
+									class:border-base-300={!column.enabled}
+								>
+									{#if column.enabled}
+										<Check size={14} weight="bold" class="text-primary-content" />
+									{/if}
+								</div>
 
-						<!-- Label -->
-						<span class="flex-1 text-base-content">{column.label}</span>
+								<!-- Label -->
+								<span class="text-base-content">{column.label}</span>
+							</div>
 
-						<!-- Drag Handle -->
-						<div class="text-base-content/40 cursor-grab active:cursor-grabbing">
-							<List size={20} />
-						</div>
-					</button>
+							<!-- Drag Handle -->
+							<div class="text-base-content/40 cursor-grab active:cursor-grabbing">
+								<List size={20} />
+							</div>
+						</button>
+					{/if}
 				{/each}
 			</div>
 

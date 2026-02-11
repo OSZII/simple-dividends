@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import PageLayout from '$lib/components/layout/PageLayout.svelte';
 	import FilterDropDown from '$lib/components/FilterDropDown.svelte';
 	import FilterChip from '$lib/components/filters/FilterChip.svelte';
@@ -6,6 +7,7 @@
 	import { Plus } from 'phosphor-svelte';
 	import { format } from 'date-fns';
 	import { getStocks, type SortableColumnKey } from '$lib/stocks.remote';
+	import { PersistedState } from 'runed';
 
 	import type { PageProps } from './$types';
 
@@ -13,16 +15,40 @@
 
 	let totalCount = $state(data.count);
 
-	console.log(data.stocks);
+	type ColumnPreference = { key: string; enabled: boolean };
+	type PersistedColumnPrefs = { prefs: ColumnPreference[]; savedAt: number };
 
-	// Column configuration for the datatable
-	let columns = $state<ColumnConfig[]>([
-		{ key: 'name', label: 'Name', sortable: true, enabled: true, align: 'left' }, // SYMBOL and Name in one
+	const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+	const persistedColumnPrefs = new PersistedState<PersistedColumnPrefs | null>(
+		'column-preferences',
+		null,
+		{
+			serializer: {
+				serialize: JSON.stringify,
+				deserialize: (value: string) => {
+					try {
+						const parsed = JSON.parse(value) as PersistedColumnPrefs | null;
+						if (parsed && Date.now() - parsed.savedAt > ONE_WEEK_MS) {
+							return null;
+						}
+						return parsed;
+					} catch {
+						return null;
+					}
+				}
+			}
+		}
+	);
+
+	// Default column definitions
+	const DEFAULT_COLUMNS: ColumnConfig[] = [
+		{ key: 'name', label: 'Name', hidden: true, sortable: true, enabled: true, align: 'left' }, // SYMBOL and Name in one
 		{
 			key: 'price',
 			label: 'Price',
 			sortable: true,
-			enabled: false,
+			enabled: true,
 			align: 'center',
 			renderType: 'currency'
 		},
@@ -30,7 +56,7 @@
 			key: 'sector',
 			label: 'Sector',
 			sortable: true,
-			enabled: false,
+			enabled: true,
 			align: 'left',
 			modify: (value: string) => {
 				let words = value.split('-');
@@ -41,7 +67,7 @@
 			key: 'marketCap',
 			label: 'Market Cap',
 			sortable: true,
-			enabled: false,
+			enabled: true,
 			align: 'center',
 			modify: (value: number) => {
 				return new Intl.NumberFormat('en-US', {
@@ -57,7 +83,7 @@
 			key: 'beta',
 			label: 'Beta',
 			sortable: true,
-			enabled: false,
+			enabled: true,
 			align: 'center',
 			modify: (value: number) => {
 				return value.toFixed(2);
@@ -96,7 +122,7 @@
 			key: 'fiftyTwoWeekRange',
 			label: '52-Week Range',
 			sortable: true,
-			enabled: false,
+			enabled: true,
 			align: 'center'
 		},
 		{
@@ -246,24 +272,72 @@
 			key: 'recessionDividendPerformance',
 			label: 'Recession Dividend Performance',
 			sortable: true,
-			enabled: false,
-			align: 'center'
+			enabled: true,
+			align: 'center',
+			modify: (value: string) => {
+				if (value === 'no_data') {
+					return 'N/A';
+				}
+				return value;
+			}
 		},
 		// TODO check again if it is correct
 		{
 			key: 'totalRecessionReturn',
 			label: 'Recession Return',
 			sortable: true,
-			enabled: false,
+			enabled: true,
 			align: 'center',
 			modify: (value: number) => {
 				if (value === -9999) {
-					return '—';
+					return 'N/A';
 				}
 				return value.toFixed(1) + '%';
 			}
 		}
-	]);
+	];
+
+	// Apply persisted preferences (order + enabled) to default columns
+	function applyPersistedPrefs(
+		defaults: ColumnConfig[],
+		saved: PersistedColumnPrefs | null
+	): ColumnConfig[] {
+		if (!saved) return defaults.map((c) => ({ ...c }));
+
+		const defaultMap = new Map(defaults.map((c) => [c.key, c]));
+		const result: ColumnConfig[] = [];
+
+		for (const pref of saved.prefs) {
+			const col = defaultMap.get(pref.key);
+			if (col) {
+				result.push({ ...col, enabled: pref.enabled });
+				defaultMap.delete(pref.key);
+			}
+		}
+
+		// Append any new columns not present in saved prefs
+		for (const col of defaultMap.values()) {
+			result.push({ ...col });
+		}
+
+		return result;
+	}
+
+	let columns = $state<ColumnConfig[]>(
+		applyPersistedPrefs(DEFAULT_COLUMNS, persistedColumnPrefs.current)
+	);
+
+	// Persist column preferences whenever they change
+	$effect(() => {
+		const prefs = columns.map((c) => ({ key: c.key, enabled: c.enabled }));
+
+		untrack(() => {
+			persistedColumnPrefs.current = {
+				prefs,
+				savedAt: Date.now()
+			};
+		});
+	});
 
 	// Sort state for database integration
 	let sortState = $state<SortState>({ column: null, direction: null });
@@ -565,7 +639,7 @@
 		<Datatable
 			{totalCount}
 			data={tableData}
-			{columns}
+			bind:columns
 			{sortState}
 			onSortChange={handleSortChange}
 			{currentPage}

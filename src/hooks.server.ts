@@ -54,36 +54,17 @@ export const handle: Handle = async ({ event, resolve }) => {
     event.locals.limit = 10;
 
 
-    let fiveYearsAgo = `${(new Date().getFullYear()) - 5}-01-01`;
-    let stockSymbols = ["AAPL", "MSFT"];
-    let start = performance.now();
-    let stockHistoryData = db
-        .selectDistinctOn([sql`date_trunc('month', ${stockHistory.date}::date)`], {
-            id: stockHistory.id,
-            symbol: stockHistory.symbol,
-            date: stockHistory.date,
-            price: stockHistory.price,
-        })
-        .from(stockHistory)
-        .where(
-            and(
-                inArray(stockHistory.symbol, stockSymbols),
-                gte(stockHistory.date, fiveYearsAgo)
-            )
-        )
-        .orderBy(
-            sql`date_trunc('month', ${stockHistory.date}::date)`,
-            asc(stockHistory.date) // Use 'asc' for first day of month, 'desc' for last day
-        );
 
-    let { sql: stockHistorySQL, params: stockHistoryParams } = stockHistoryData.toSQL();
-    // console.log("sql", stockHistorySQL);
-    // console.log(stockHistoryParams);
-    // console.log(stockHistoryData.());
+    // let { sql: stockHistorySQL, params: stockHistoryParams } = stockHistoryData.toSQL();
+    // // console.log("sql", stockHistorySQL);
+    // // console.log(stockHistoryParams);
+    // // console.log(stockHistoryData.());
 
 
-    console.log("stockhistory hooks", await stockHistoryData);
-    console.log(performance.now() - start);
+    // console.log("stockhistory hooks", stockHistoryDataResult.length);
+    // console.log(performance.now() - start);
+    // console.log("###########################");
+
 
     // get query param here
     const scriptParam = event.url.searchParams.get('script');
@@ -93,13 +74,13 @@ export const handle: Handle = async ({ event, resolve }) => {
     if (scriptParam === 'import-history') {
         importStockHistory();
     }
-    if (scriptParam === 'calculate-recession-returns') {
+    if (scriptParam === 'calculate-recession') {
         calculateRecessionReturns();
     }
-    if (scriptParam === 'import-quote-summary') {
+    if (scriptParam === 'import-quote') {
         importQuoteSummary();
     }
-    if (scriptParam === 'calculate-dividend-metrics') {
+    if (scriptParam === 'calculate-dividend') {
         calculateDividendMetrics();
     }
 
