@@ -33,8 +33,7 @@
 	} from 'phosphor-svelte';
 	import ColumnModal from './ColumnModal.svelte';
 	import RangeDisplay from './DataTableDisplays/RangeDisplay.svelte';
-	import Line from './DataTableDisplays/Line.svelte';
-	import { LayerCake, Svg } from 'layercake';
+	import { Chart } from './chart';
 
 	interface Props {
 		columns: ColumnConfig[];
@@ -230,13 +229,17 @@
 										(row.priceHistory as { date: string; price: string }[] | undefined)?.map(
 											(item) => ({ x: new Date(item.date), y: parseFloat(item.price) })
 										) ?? []}
-									{parseFloat(row[column.key]).toFixed(2)}$
+									<p class="text-xs mb-2">
+										{parseFloat(row[column.key] as string).toFixed(2)}$
+									</p>
 									<div class="h-5 w-24">
-										<LayerCake x="x" y="y" data={priceHistory}>
-											<Svg>
-												<Line />
-											</Svg>
-										</LayerCake>
+										<Chart
+											baselineStroke="#FFF"
+											baselineStrokeWidth={1}
+											baselineStrokeDasharray="3,3"
+											baseline={row.price}
+											data={priceHistory}
+										/>
 									</div>
 								{:else if column.key === 'name'}
 									<p class="text-sm">{row.symbol}</p>
