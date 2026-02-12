@@ -26,13 +26,9 @@
 		<div
 			class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-[135deg,#6366f1_0%,#a855f7_100%] font-extrabold text-white"
 		>
-			S
+			SD
 		</div>
-		<span
-			class="bg-linear-to-r from-white to-[#94a3b8] bg-clip-text text-lg font-bold whitespace-nowrap text-transparent opacity-100 transition-opacity duration-300"
-		>
-			Simple Dividends
-		</span>
+		<span class="text-lg font-bold whitespace-nowrap text-white">Simple Dividends</span>
 		<List
 			onclick={() => {
 				menueOpened = !menueOpened;
@@ -52,13 +48,9 @@
 			<div
 				class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-[135deg,#6366f1_0%,#a855f7_100%] font-extrabold text-white"
 			>
-				S
+				SD
 			</div>
-			<span
-				class="bg-linear-to-r from-white to-[#94a3b8] bg-clip-text text-lg font-bold whitespace-nowrap text-transparent opacity-100 transition-opacity duration-300"
-			>
-				Simple Toolz
-			</span>
+			<span class="text-lg font-bold whitespace-nowrap text-white">Simple Dividends</span>
 		</a>
 	</div>
 

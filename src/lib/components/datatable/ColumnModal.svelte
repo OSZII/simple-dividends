@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ColumnConfig } from './Datatable.svelte';
+	import type { ColumnConfig } from './types.js';
 	import { List, Check } from 'phosphor-svelte';
 
 	interface Props {
@@ -41,10 +41,6 @@
 	function closeModal() {
 		open = false;
 	}
-
-	// $effect(() => {
-	// 	console.log('columns', columns);
-	// });
 </script>
 
 {#if open}

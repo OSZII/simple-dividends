@@ -1,25 +1,3 @@
-<script lang="ts" module>
-	export type SortDirection = 'asc' | 'desc' | null;
-
-	export interface ColumnConfig {
-		key: string;
-		label: string;
-		sortable: boolean;
-		enabled: boolean;
-		width?: string;
-		hidden?: boolean;
-		align?: 'left' | 'center' | 'right';
-		renderType?: 'text' | 'currency' | 'percent' | 'badge' | 'chart';
-		// this is to modify values on the table confic level
-		modify?: (value: any) => any;
-	}
-
-	export interface SortState {
-		column: string | null;
-		direction: SortDirection;
-	}
-</script>
-
 <script lang="ts">
 	import {
 		CaretUp,
@@ -32,8 +10,10 @@
 		CaretDoubleRight
 	} from 'phosphor-svelte';
 	import ColumnModal from './ColumnModal.svelte';
-	import RangeDisplay from './DataTableDisplays/RangeDisplay.svelte';
-	import { Chart } from './chart';
+	import RangeDisplay from './RangeDisplay.svelte';
+	import { Chart } from '../chart';
+	import type { ColumnConfig, SortState, SortDirection } from './types.js';
+	import { formatCellValue, getPaginationRange } from './helpers.js';
 
 	interface Props {
 		columns: ColumnConfig[];
@@ -94,57 +74,12 @@
 		return sortState.direction;
 	}
 
-	function formatCellValue(value: unknown, column: ColumnConfig): string {
-		if (value === null || value === undefined) return '—';
-
-		switch (column.renderType) {
-			case 'currency':
-				return typeof value === 'number'
-					? new Intl.NumberFormat('en-US', {
-							style: 'currency',
-							currency: 'USD',
-							maximumFractionDigits: 2
-						}).format(value)
-					: String(value);
-			case 'percent':
-				return typeof value === 'number' ? `${(value * 100).toFixed(2)}%` : String(value);
-			default:
-				return String(value);
-		}
-	}
 	function handlePageChange(newPage: number) {
 		if (newPage < 1 || newPage > totalPages) return;
 		onPageChange?.(newPage);
 	}
 
 	const totalPages = $derived(Math.ceil(totalCount / pageSize));
-
-	function getPaginationRange(current: number, totalPages: number): (number | string)[] {
-		// always show 5 pages
-		let showRange = 5;
-		const range: (number | string)[] = [];
-
-		if (totalPages <= showRange) {
-			for (let i = 1; i <= totalPages; i++) {
-				range.push(i);
-			}
-			return range;
-		}
-
-		for (let i = 1; i <= showRange; i++) {
-			if (current < showRange - 1) {
-				range.push(i);
-			} else if (current + 2 >= totalPages) {
-				let offset = showRange;
-				range.push(totalPages - offset + i);
-			} else {
-				let offset = current - 3;
-				range.push(offset + i);
-			}
-		}
-
-		return range;
-	}
 </script>
 
 <div class="w-full">

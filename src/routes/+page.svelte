@@ -3,11 +3,11 @@
 	import PageLayout from '$lib/components/layout/PageLayout.svelte';
 	import FilterDropDown from '$lib/components/FilterDropDown.svelte';
 	import FilterChip from '$lib/components/filters/FilterChip.svelte';
-	import Datatable, { type ColumnConfig, type SortState } from '$lib/components/Datatable.svelte';
+	import { Datatable, type ColumnConfig, type SortState } from '$lib/components/datatable';
 	import { Plus } from 'phosphor-svelte';
 	import { format } from 'date-fns';
 	import { getStocks, type SortableColumnKey } from '$lib/stocks.remote';
-	import { PersistedState } from 'runed';
+	import { CookieManager } from '$lib/CookieManager';
 
 	import type { PageProps } from './$types';
 
@@ -18,28 +18,7 @@
 	type ColumnPreference = { key: string; enabled: boolean };
 	type PersistedColumnPrefs = { prefs: ColumnPreference[]; savedAt: number };
 
-	const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
-	const persistedColumnPrefs = new PersistedState<PersistedColumnPrefs | null>(
-		'column-preferences',
-		null,
-		{
-			serializer: {
-				serialize: JSON.stringify,
-				deserialize: (value: string) => {
-					try {
-						const parsed = JSON.parse(value) as PersistedColumnPrefs | null;
-						if (parsed && Date.now() - parsed.savedAt > ONE_WEEK_MS) {
-							return null;
-						}
-						return parsed;
-					} catch {
-						return null;
-					}
-				}
-			}
-		}
-	);
+	const cookieManager = new CookieManager();
 
 	// Default column definitions
 	const DEFAULT_COLUMNS: ColumnConfig[] = [
@@ -324,18 +303,18 @@
 	}
 
 	let columns = $state<ColumnConfig[]>(
-		applyPersistedPrefs(DEFAULT_COLUMNS, persistedColumnPrefs.current)
+		applyPersistedPrefs(DEFAULT_COLUMNS, data.columnPreferences)
 	);
 
-	// Persist column preferences whenever they change
+	// Persist column preferences to cookie whenever they change
 	$effect(() => {
 		const prefs = columns.map((c) => ({ key: c.key, enabled: c.enabled }));
 
 		untrack(() => {
-			persistedColumnPrefs.current = {
+			cookieManager.set('column-preferences', {
 				prefs,
 				savedAt: Date.now()
-			};
+			}, 7);
 		});
 	});
 
